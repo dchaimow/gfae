@@ -1,9 +1,18 @@
 #!/bin/bash
+set -e
 
-docker run --rm repronim/neurodocker:0.7.0 generate docker \
+docker run --rm repronim/neurodocker:master generate docker \
        --base neurodebian:stretch-non-free \
        --pkg-manager apt \
-       --fsl version=6.0.3 \
-       --miniconda create_env=neuro \
-       conda_install="python=3.8 traits" \
-       pip_install="nipype" > Dockerfile
+       --afni version=latest \
+       --ants version=2.3.4 \
+       --fsl version=6.0.4 \
+       > Dockerfile
+
+
+# dcm2niix
+# freesurfer
+# miniconda
+# spm12
+
+# python: nipype, nilearn, nibabel
