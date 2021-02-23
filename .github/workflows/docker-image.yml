@@ -2,8 +2,10 @@ name: CI to Docker hub
 
 on:
   push:
-    branches: [ master ]
-
+    paths:
+      - Dockerfile
+      - .github/workflows/docker-image.yml
+      
 jobs:
   build:
     runs-on: ubuntu-latest
