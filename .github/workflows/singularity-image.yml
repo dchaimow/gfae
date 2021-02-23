@@ -1,8 +1,10 @@
 name: build singularity container
 on:
   push:
-    branches: [ master ]
-    
+    paths:
+      - Dockerfile
+      - .github/workflows/docker-image.yml
+
 jobs:
   build:
     runs-on: ubuntu-latest
