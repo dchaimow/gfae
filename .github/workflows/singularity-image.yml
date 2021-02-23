@@ -1,9 +1,9 @@
-name: build singularity container
+name: build singularity image and push to sylabs cloud
 on:
   push:
     paths:
-      - Dockerfile
-      - .github/workflows/docker-image.yml
+      - Singularity
+      - .github/workflows/singularity-image.yml
 
 jobs:
   build:
