@@ -4,19 +4,13 @@ set -e
 generate_docker() {
     docker run --rm repronim/neurodocker:master generate docker \
            --base neurodebian:stretch-non-free \
-           --pkg-manager apt \
-           --afni version=latest \
-           --ants version=2.3.4 \
-           --fsl version=6.0.4
+           --pkg-manager apt 
 }
 
 generate_singularity() {
     docker run --rm repronim/neurodocker:master generate singularity \
            --base neurodebian:stretch-non-free \
-           --pkg-manager apt \
-           --afni version=latest \
-           --ants version=2.3.4 \
-           --fsl version=6.0.4
+           --pkg-manager apt 
 }
 
 generate_docker > Dockerfile
