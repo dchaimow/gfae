@@ -7,14 +7,14 @@ export SINGULARITY_TMPDIR=$(pwd)/tmp
 install_parameters="
                  --base debian:buster
                  --pkg-manager apt
-                 --fsl version=6.0.4
+                 --fsl version=6.0.3
                  --afni version=latest"
 
 # install_parameters="
 #                  --base debian:buster
 #                  --pkg-manager apt
 #                  --afni version=latest
-#                  --ants version=2.3.4
+#                  --ants version=2.3.1
 #                  --dcm2niix version=latest
 #                  --freesurfer version=7.1.1
 #                  --copy license.txt /opt/freesurfer-7.1.1/
