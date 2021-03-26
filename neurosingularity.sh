@@ -5,7 +5,7 @@ export SINGULARITY_CACHEDIR=$(pwd)/tmp
 export SINGULARITY_TMPDIR=$(pwd)/tmp
 
 install_parameters="
-                 --base debian:buster
+                 --base debian:stretch
                  --pkg-manager apt
                  --fsl version=6.0.3
                  --afni version=latest"
