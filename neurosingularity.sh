@@ -8,8 +8,8 @@ install_parameters="
                  --base debian:stretch
                  --pkg-manager apt
                  --fsl version=6.0.3
-                 --freesurfer version=7.1.1
-                 --copy license.txt /opt/freesurfer-7.1.1/"
+                 --freesurfer version=6.0.1
+                 --copy license.txt /opt/freesurfer-6.0.1/"
 
 # install_parameters="
 #                  --base debian:buster
