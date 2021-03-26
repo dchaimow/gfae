@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker build -t gfae .
+docker build -t dchaimow/gfae .
 
