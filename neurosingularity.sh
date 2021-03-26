@@ -7,16 +7,22 @@ export SINGULARITY_TMPDIR=$(pwd)/tmp
 install_parameters="
                  --base debian:buster
                  --pkg-manager apt
-                 --afni version=latest
-                 --ants version=2.3.4
-                 --dcm2niix version=latest
-                 --freesurfer version=7.1.1
-                 --copy license.txt /opt/freesurfer-7.1.1/
-                 --fsl version=6.0.3
-                 --miniconda create_env=neuro \
-                             conda_install='python 3.8 numpy pandas scipy traits nilearn \
-                                            scikit-learn nipype jupyter nibabel'
-                 --spm12 version=r7771"
+                 --fsl version=6.0.4
+                 --afni version=latest"
+
+# install_parameters="
+#                  --base debian:buster
+#                  --pkg-manager apt
+#                  --afni version=latest
+#                  --ants version=2.3.4
+#                  --dcm2niix version=latest
+#                  --freesurfer version=7.1.1
+#                  --copy license.txt /opt/freesurfer-7.1.1/
+#                  --fsl version=6.0.3
+#                  --miniconda create_env=neuro \
+#                              conda_install='python 3.8 numpy pandas scipy traits nilearn \
+#                                             scikit-learn nipype jupyter nibabel'
+#                  --spm12 version=r7771"
 
 # todo: LAYNII, ITK-SNAP
 
