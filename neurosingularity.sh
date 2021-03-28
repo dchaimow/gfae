@@ -8,8 +8,15 @@ install_parameters="
                  --base debian:stretch
                  --pkg-manager apt
                  --fsl version=6.0.3
+                 --afni version=latest
                  --freesurfer version=6.0.1
-                 --copy license.txt /opt/freesurfer-6.0.1/"
+                 --copy license.txt /opt/freesurfer-6.0.1/
+                 --ants version=2.3.1
+                 --dcm2niix version=latest
+                 --miniconda create_env=neuro \
+                             conda_install='python 3.8 numpy pandas scipy traits nilearn \
+                                            scikit-learn nipype jupyter nibabel'
+                 --spm12 version=r7771"
 
 # install_parameters="
 #                  --base debian:buster
