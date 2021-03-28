@@ -12,7 +12,7 @@ install_parameters="
                  --freesurfer version=6.0.1
                  --copy license.txt /opt/freesurfer-6.0.1/
                  --ants version=2.3.1
-                 --dcm2niix version=latest
+                 --dcm2niix version=latest method=source
                  --miniconda create_env=neuro \
                              conda_install='python 3.8 numpy pandas scipy traits nilearn \
                                             scikit-learn nipype jupyter nibabel'
