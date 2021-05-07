@@ -1,0 +1,55 @@
+tar: ./.exec: implausibly old time stamp -9223372036854775808
+tar: ./.run: implausibly old time stamp -9223372036854775808
+tar: ./.shell: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/actions/exec: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/actions/run: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/actions/shell: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/actions/start: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/actions/test: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/actions: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/env/01-base.sh: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/env/90-environment.sh: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/env/95-apps.sh: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/env/99-base.sh: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/env: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/libs: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/runscript: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d/startscript: implausibly old time stamp -9223372036854775808
+tar: ./.singularity.d: implausibly old time stamp -9223372036854775808
+tar: ./.test: implausibly old time stamp -9223372036854775808
+tar: ./dev: implausibly old time stamp -9223372036854775808
+tar: ./environment: implausibly old time stamp -9223372036854775808
+tar: ./etc/hosts: implausibly old time stamp -9223372036854775808
+tar: ./etc/resolv.conf: implausibly old time stamp -9223372036854775808
+tar: ./etc: implausibly old time stamp -9223372036854775808
+tar: ./home: implausibly old time stamp -9223372036854775808
+tar: ./proc: implausibly old time stamp -9223372036854775808
+tar: ./root: implausibly old time stamp -9223372036854775808
+tar: ./singularity: implausibly old time stamp -9223372036854775808
+tar: ./sys: implausibly old time stamp -9223372036854775808
+tar: ./tmp: implausibly old time stamp -9223372036854775808
+tar: ./var/tmp: implausibly old time stamp -9223372036854775808
+tar: ./var: implausibly old time stamp -9223372036854775808
+tar: .: implausibly old time stamp -9223372036854775808
++ su - root
+-bash: line 1: et: command not found
+E: Unable to locate package bc
+E: Unable to locate package libncurses5
+E: Unable to locate package libxext6
+E: Unable to locate package libxmu6
+E: Unable to locate package libxpm-dev
+E: Unable to locate package libxt6
+-bash: line 12: curl: command not found
+[1mdpkg:[0m [1;31merror:[0m cannot access archive '/tmp/toinstall.deb': No such file or directory
+rm: cannot remove '/tmp/toinstall.deb': No such file or directory
+-bash: line 18: curl: command not found
+chmod: cannot access '/MCRInstaller.bin': No such file or directory
+-bash: line 20: /MCRInstaller.bin: No such file or directory
+-bash: line 24: curl: command not found
+-bash: line 25: unzip: command not found
+mv: cannot stat '/tmp/spm12/*': No such file or directory
+-bash: line 30: /opt/spm12-r7771/run_spm12.sh: No such file or directory
+sed: no input files
+bash: line 1: git: command not found
+-bash: line 117: /neurodocker/neurodocker_specs.json: No such file or directory
+ABORT: Aborting with RETVAL=255
