@@ -1,0 +1,13 @@
+debian
+
+VB setup
+- memory 4GB
+- VDI 40 GB
+
+Install debian from netinst iso:
+su -
+apt update
+apt upgrade
+apt install sudo
+usermod -aG sudo denis
+logout

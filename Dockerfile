@@ -7,9 +7,9 @@
 # 
 #     https://github.com/ReproNim/neurodocker
 # 
-# Timestamp: 2021/04/27 15:04:24 UTC
+# Timestamp: 2021/05/08 15:27:46 UTC
 
-FROM neurodebian:stretch-non-free
+FROM debian:buster
 
 USER root
 
@@ -89,12 +89,12 @@ COPY ["license.txt", "/license.txt"]
 
 ENV FS_LICENSE="/license.txt"
 
-ENV FSLDIR="/opt/fsl-6.0.3" \
-    PATH="/opt/fsl-6.0.3/bin:$PATH" \
+ENV FSLDIR="/opt/fsl-6.0.4" \
+    PATH="/opt/fsl-6.0.4/bin:$PATH" \
     FSLOUTPUTTYPE="NIFTI_GZ" \
     FSLMULTIFILEQUIT="TRUE" \
-    FSLTCLSH="/opt/fsl-6.0.3/bin/fsltclsh" \
-    FSLWISH="/opt/fsl-6.0.3/bin/fslwish" \
+    FSLTCLSH="/opt/fsl-6.0.4/bin/fsltclsh" \
+    FSLWISH="/opt/fsl-6.0.4/bin/fslwish" \
     FSLLOCKDIR="" \
     FSLMACHINELIST="" \
     FSLREMOTECALL="" \
@@ -122,15 +122,13 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && echo "Downloading FSL ..." \
-    && mkdir -p /opt/fsl-6.0.3 \
-    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.3-centos6_64.tar.gz \
-    | tar -xz -C /opt/fsl-6.0.3 --strip-components 1 \
+    && mkdir -p /opt/fsl-6.0.4 \
+    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.4-centos6_64.tar.gz \
+    | tar -xz -C /opt/fsl-6.0.4 --strip-components 1 \
     && sed -i '$iecho Some packages in this Docker container are non-free' $ND_ENTRYPOINT \
     && sed -i '$iecho If you are considering commercial use of this container, please consult the relevant license:' $ND_ENTRYPOINT \
     && sed -i '$iecho https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' $ND_ENTRYPOINT \
-    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT \
-    && echo "Installing FSL conda environment ..." \
-    && bash /opt/fsl-6.0.3/etc/fslconf/fslpython_install.sh -f /opt/fsl-6.0.3
+    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT
 
 ENV ANTSPATH="/opt/ants-2.3.1" \
     PATH="/opt/ants-2.3.1:$PATH"
@@ -189,7 +187,7 @@ RUN echo '{ \
     \n  "instructions": [ \
     \n    [ \
     \n      "base", \
-    \n      "neurodebian:stretch-non-free" \
+    \n      "debian:buster" \
     \n    ], \
     \n    [ \
     \n      "install", \
@@ -223,7 +221,7 @@ RUN echo '{ \
     \n    [ \
     \n      "fsl", \
     \n      { \
-    \n        "version": "6.0.3" \
+    \n        "version": "6.0.4" \
     \n      } \
     \n    ], \
     \n    [ \

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker build -t dchaimow/gfae .
+docker build --output type=tar,dest=gfae.tar .
 
