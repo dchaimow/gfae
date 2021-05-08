@@ -7,7 +7,7 @@
 # 
 #     https://github.com/ReproNim/neurodocker
 # 
-# Timestamp: 2021/05/08 15:27:46 UTC
+# Timestamp: 2021/05/08 16:06:03 UTC
 
 FROM debian:buster
 
@@ -54,127 +54,6 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-ENV FREESURFER_HOME="/opt/freesurfer-7.1.1" \
-    PATH="/opt/freesurfer-7.1.1/bin:$PATH"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           bc \
-           libgomp1 \
-           libxmu6 \
-           libxt6 \
-           perl \
-           tcsh \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "Downloading FreeSurfer ..." \
-    && mkdir -p /opt/freesurfer-7.1.1 \
-    && curl -fsSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.1.1/freesurfer-linux-centos6_x86_64-7.1.1.tar.gz \
-    | tar -xz -C /opt/freesurfer-7.1.1 --strip-components 1 \
-         --exclude='freesurfer/average/mult-comp-cor' \
-         --exclude='freesurfer/lib/cuda' \
-         --exclude='freesurfer/lib/qt' \
-         --exclude='freesurfer/subjects/V1_average' \
-         --exclude='freesurfer/subjects/bert' \
-         --exclude='freesurfer/subjects/cvs_avg35' \
-         --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
-         --exclude='freesurfer/subjects/fsaverage3' \
-         --exclude='freesurfer/subjects/fsaverage4' \
-         --exclude='freesurfer/subjects/fsaverage5' \
-         --exclude='freesurfer/subjects/fsaverage6' \
-         --exclude='freesurfer/subjects/fsaverage_sym' \
-         --exclude='freesurfer/trctrain' \
-    && sed -i '$isource "/opt/freesurfer-7.1.1/SetUpFreeSurfer.sh"' "$ND_ENTRYPOINT"
-
-COPY ["license.txt", "/license.txt"]
-
-ENV FS_LICENSE="/license.txt"
-
-ENV FSLDIR="/opt/fsl-6.0.4" \
-    PATH="/opt/fsl-6.0.4/bin:$PATH" \
-    FSLOUTPUTTYPE="NIFTI_GZ" \
-    FSLMULTIFILEQUIT="TRUE" \
-    FSLTCLSH="/opt/fsl-6.0.4/bin/fsltclsh" \
-    FSLWISH="/opt/fsl-6.0.4/bin/fslwish" \
-    FSLLOCKDIR="" \
-    FSLMACHINELIST="" \
-    FSLREMOTECALL="" \
-    FSLGECUDAQ="cuda.q"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           bc \
-           dc \
-           file \
-           libfontconfig1 \
-           libfreetype6 \
-           libgl1-mesa-dev \
-           libgl1-mesa-dri \
-           libglu1-mesa-dev \
-           libgomp1 \
-           libice6 \
-           libxcursor1 \
-           libxft2 \
-           libxinerama1 \
-           libxrandr2 \
-           libxrender1 \
-           libxt6 \
-           sudo \
-           wget \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo "Downloading FSL ..." \
-    && mkdir -p /opt/fsl-6.0.4 \
-    && curl -fsSL --retry 5 https://fsl.fmrib.ox.ac.uk/fsldownloads/fsl-6.0.4-centos6_64.tar.gz \
-    | tar -xz -C /opt/fsl-6.0.4 --strip-components 1 \
-    && sed -i '$iecho Some packages in this Docker container are non-free' $ND_ENTRYPOINT \
-    && sed -i '$iecho If you are considering commercial use of this container, please consult the relevant license:' $ND_ENTRYPOINT \
-    && sed -i '$iecho https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Licence' $ND_ENTRYPOINT \
-    && sed -i '$isource $FSLDIR/etc/fslconf/fsl.sh' $ND_ENTRYPOINT
-
-ENV ANTSPATH="/opt/ants-2.3.1" \
-    PATH="/opt/ants-2.3.1:$PATH"
-RUN echo "Downloading ANTs ..." \
-    && mkdir -p /opt/ants-2.3.1 \
-    && curl -fsSL --retry 5 https://dl.dropbox.com/s/1xfhydsf4t4qoxg/ants-Linux-centos6_x86_64-v2.3.1.tar.gz \
-    | tar -xz -C /opt/ants-2.3.1 --strip-components 1
-
-ENV PATH="/opt/afni-latest:$PATH" \
-    AFNI_PLUGINPATH="/opt/afni-latest"
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-           ed \
-           gsl-bin \
-           libglib2.0-0 \
-           libglu1-mesa-dev \
-           libglw1-mesa \
-           libgomp1 \
-           libjpeg62 \
-           libxm4 \
-           multiarch-support \
-           netpbm \
-           tcsh \
-           xfonts-base \
-           xvfb \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://mirrors.kernel.org/debian/pool/main/libx/libxp/libxp6_1.0.2-2_amd64.deb \
-    && dpkg -i /tmp/toinstall.deb \
-    && rm /tmp/toinstall.deb \
-    && curl -sSL --retry 5 -o /tmp/toinstall.deb http://snapshot.debian.org/archive/debian-security/20160113T213056Z/pool/updates/main/libp/libpng/libpng12-0_1.2.49-1%2Bdeb7u2_amd64.deb \
-    && dpkg -i /tmp/toinstall.deb \
-    && rm /tmp/toinstall.deb \
-    && apt-get install -f \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && gsl2_path="$(find / -name 'libgsl.so.19' || printf '')" \
-    && if [ -n "$gsl2_path" ]; then \
-         ln -sfv "$gsl2_path" "$(dirname $gsl2_path)/libgsl.so.0"; \
-    fi \
-    && ldconfig \
-    && echo "Downloading AFNI ..." \
-    && mkdir -p /opt/afni-latest \
-    && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
-    | tar -xz -C /opt/afni-latest --strip-components 1
-
 RUN bash -c 'cd /opt && \
                            git clone https://github.com/layerfMRI/laynii && \
                            cd /opt/laynii && \
@@ -198,43 +77,6 @@ RUN echo '{ \
     \n        "g++", \
     \n        "zlib1g-dev" \
     \n      ] \
-    \n    ], \
-    \n    [ \
-    \n      "freesurfer", \
-    \n      { \
-    \n        "version": "7.1.1" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "copy", \
-    \n      [ \
-    \n        "license.txt", \
-    \n        "/license.txt" \
-    \n      ] \
-    \n    ], \
-    \n    [ \
-    \n      "env", \
-    \n      { \
-    \n        "FS_LICENSE": "/license.txt" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "fsl", \
-    \n      { \
-    \n        "version": "6.0.4" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "ants", \
-    \n      { \
-    \n        "version": "2.3.1" \
-    \n      } \
-    \n    ], \
-    \n    [ \
-    \n      "afni", \
-    \n      { \
-    \n        "version": "latest" \
-    \n      } \
     \n    ], \
     \n    [ \
     \n      "run_bash", \
