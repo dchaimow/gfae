@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: centos:7
+
+
+
+%environment
+        export SPM_HOME=/opt/spm12
+        export MCR_HOME=/opt/mcr/v93
+        export MCR_INHIBIT_CTF_LOCK=1
+        export SPM_HTML_BROWSER=0
+
+%post
+        tmp=$(mktemp -d)
+        yum -y update
+        yum install -y -q \
+            epel-release \
+            which \
+            wget \
+            ca-certificates \
+            unzip \
+            git \
+            nano \
+            bc
+
+        yum install -y -q \
+            libXext.x86_64 \
+            libXmu \
+            libXpm \
+            libXt.x86_64 \
+            java-1.8.0-openjdk \
+            dbus-x11
+
+
+        # Matlab Runtime
+        mkdir -p opt/mcr
+        wget https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip -P ${tmp}
+        unzip -q ${tmp}/MCR_R2017b_glnxa64_installer.zip -d ${tmp}
+        ${tmp}/install -mode silent -agreeToLicense yes -destinationFolder /opt/mcr
+        
+        # SPM12 with CAT12
+        wget https://www.neuro.uni-jena.de/cat12/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -P ${tmp}
+        unzip -q ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -d ${tmp}
+        mv ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux /opt/spm12
+        chmod +x /opt/spm12/run_spm12.sh /opt/spm12/spm12 
+        # single call (to build spm12.ctf while we have write permissions)
+        /opt/spm12/run_spm12.sh /opt/mcr/v93 function exit
+        # set up single spm executable
+        printf '#!/bin/bash\n/opt/spm12/run_spm12.sh /opt/mcr/v93 "$@"' > \
+               /opt/spm12/spm12_mcr/bin/spm12
+        chmod +x /opt/spm12/spm12_mcr/bin/spm12
+        ln -s /opt/spm12/spm12_mcr/bin/spm12 /usr/local/bin/spm12

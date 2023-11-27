@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: centos:7
+
+%files
+
+
+%environment
+         export XDG_RUNTIME_DIR=/tmp/.run_$(uuidgen)
+
+%post
+        tmp=$(mktemp -d)
+        
+        yum -y update
+        yum install -y -q \
+            epel-release \
+            which \
+            wget \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            tree \
+            bc
+
+        yum install -y -q \
+            glibc \
+            gtk3 \
+            dbus-glib \
+            glib \
+            libstdc++ \
+            libXtst \
+            libX11 \
+            mesa-dri-drivers \
+            mesa-libEGL \
+            glx-utils \
+            dbus \
+            networkmanager \
+            pciutils-libs \
+            pulseaudio
+
+         # Firefox
+            wget -O ${tmp}/firefox-latest.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"
+            tar xvjf ${tmp}/firefox-latest.tar.bz2 -C /usr/local 
+            ln -s /usr/local/firefox/firefox /usr/bin/firefox 
+
+            # Clean up
+            yum clean all
+            rm -rf /var/cache/yum/*        
+            rm -rf ${tmp}
+            

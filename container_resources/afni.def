@@ -1,0 +1,116 @@
+Bootstrap: docker
+From: centos:7
+
+%environment
+        export PATH="/opt/afni:$PATH"
+        export AFNI_PLUGINPATH="/opt/afni"
+
+        # for R:
+        export R_LIBS=/opt/R
+
+        # CONDA
+        export CONDA_DIR=/opt/conda
+        export PATH=/opt/conda/bin:$PATH
+
+        # INITIALIZE [BASH Completion; Conda]
+        export PROMPT_COMMAND='. /etc/profile.d/bash_completion.sh; . /opt/conda/etc/profile.d/conda.sh; . /opt/conda/etc/profile.d/mamba.sh; conda activate base; unset PROMPT_COMMAND'
+
+
+
+%post
+
+        tmp=$(mktemp -d)
+        
+        yum -y update
+        yum install -y -q \
+            epel-release \
+            which \
+            wget \
+            ca-certificates \
+            unzip \
+            git \
+            nano \
+            tree \
+            bc \
+            bash-completion
+
+        # Mambaforge
+        export PATH=/opt/conda/bin:$PATH
+        wget https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/Mambaforge-23.3.1-1-Linux-x86_64.sh -P ${tmp}
+        bash ${tmp}/Mambaforge-23.3.1-1-Linux-x86_64.sh -b -p /opt/conda
+        mamba update -yq -nbase conda
+        conda config --system --set auto_update_conda false
+        conda config --system --set show_channel_urls true
+        # install; nibabel 3.2 because of ciftify issue
+        mamba install -y  --name base \
+           "python" \
+           "nipype" \
+           "notebook" \
+           "numpy" \
+           "scipy" \
+           "nibabel=3.2" \
+           "matplotlib>=2.2.3" \
+           "flask>=2.1.2" \
+           "flask-cors>=3.0.10"
+
+        # AFNI
+        yum install -y -q \
+            R \
+            R-devel \
+            cmake \
+            curl \
+            ed \
+            gsl \
+            libGLU \
+            libXp \
+            libXpm \
+            libcurl-devel \
+            libgomp \
+            libjpeg-turbo-devel \
+            libpng12 \
+            mesa-dri-drivers \
+            mesa-libEGL \
+            mesa-libGLw \
+            ncurses-compat-libs \
+            netpbm-progs \
+            openmotif \
+            openssl-devel \
+            PyQt4 \
+            tcsh \
+            udunits2-devel \
+            unzip \
+            wget \
+            which \
+            xorg-x11-fonts-misc \
+            xorg-x11-server-Xvfb
+
+        yum localinstall -y -q --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
+        yum install -y -q ffmpeg
+
+            # gsl_path="$(find / -name 'libgsl.so.??' || printf '')"
+            # if [ -n "$gsl_path" ]; then \
+            #   ln -sfv "$gsl_path" "$(dirname $gsl_path)/libgsl.so.0"; \
+            # fi
+            # ldconfig
+
+            
+            mkdir -p /opt/afni
+            curl -fL https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
+            | tar -xz -C /opt/afni --strip-components 1
+
+            # Alternatively:
+            #wget https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz -P ${tmp}
+            #tar -xz -C /opt/afni --strip-components 1 -f ${tmp}/linux_openmp_64.tgz
+            #wget https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries -P ${tmp}
+            #tcsh ${tmp}/@update.afni.binaries -package linux_centos_7_64 -do_extras -bindir /opt/afni
+            #export PATH="/opt/afni:$PATH"
+            #export AFNI_PLUGINPATH="/opt/afni"
+            # R
+            #mkdir  /opt/R
+            #export R_LIBS=/opt/R
+            #rPkgsInstall -pkgs ALL
+            
+            # Clean up
+            yum clean all
+            rm -rf /var/cache/yum/*        
+            rm -rf ${tmp}

@@ -1,0 +1,71 @@
+Bootstrap: docker
+From: centos:7
+
+
+
+%environment
+        export PATH=$PATH:/opt/workbench/bin_rh_linux64
+        source /etc/profile.d/bash_completion.sh
+        export PROMPT_COMMAND='. /etc/profile.d/bash_completion.sh; unset PROMPT_COMMAND'
+        export QT_XKB_CONFIG_ROOT=/usr/share/X11/xkb
+
+
+%post
+        tmp=$(mktemp -d)
+        #yum -y update
+        yum install -y -q \
+            epel-release \
+            which \
+            wget \
+            ca-certificates \
+            unzip \
+            git \
+            nano \
+            bc
+
+        
+
+        yum install -y -q \
+            bash-completion \
+            freetype \
+            libGLU \
+            libX11 \
+            libglvnd-glx \
+            mesa-libGLU \
+            libGL \
+            gtk2 \
+            libICE \
+            libSM \
+            libX11 \
+            libXcursor \
+            libXext \
+            libXft \
+            libXinerama \
+            libXrandr \
+            libXt \
+            libgomp \
+            libjpeg \
+            libmng \
+            libpng12 \
+            nano \
+            openblas-serial \
+            glx-utils \
+            mesa-dri-drivers \
+            tcl \
+            tk \
+            python \
+            wget 
+            
+
+        # Connectome Workbench
+        wget https://www.humanconnectome.org/storage/app/media/workbench/workbench-rh_linux64-v1.5.0.zip -P ${tmp}
+        unzip -q ${tmp}/workbench-rh_linux64-v1.5.0.zip -d ${tmp}
+        mv ${tmp}/workbench /opt/
+        cp /opt/workbench/exe_rh_linux64/bashcomplete_wb_command /usr/share/bash-completion/completions/wb_command
+        
+        ln -s -f /usr/lib64/libstdc++.so.6 /opt/workbench/libs_rh_linux64/libstdc++.so.6
+
+        # Clean up
+        yum clean all
+        rm -rf /var/cache/yum/*        
+        rm -rf ${tmp}

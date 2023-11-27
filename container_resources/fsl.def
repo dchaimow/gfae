@@ -1,0 +1,59 @@
+Bootstrap: docker
+From: centos:7
+
+%environment
+        export FSLDIR=/opt/fsl
+        export PATH=$FSLDIR/bin/:$PATH
+        source $FSLDIR/etc/fslconf/fsl.sh
+        export FSLWISH=/usr/bin/wish
+        export FSLTCLSH=/usr/bin/tclsh
+
+%post
+        yum install -y -q \
+            epel-release \
+            which
+            
+
+        yum install -y -q \
+            bc \
+            bzip2 \
+            curl  \
+            dc \
+            file \
+            gtk2 \
+            libGL \
+            libGLU \
+            libICE \
+            libSM \
+            libX11 \
+            libXcursor \
+            libXext \
+            libXft \
+            libXinerama \
+            libXrandr \
+            libXt \
+            libgomp \
+            libjpeg \
+            libmng \
+            libpng12 \
+            nano \
+            openblas-serial \
+            glx-utils \
+            mesa-dri-drivers \
+            tcl \
+            tk \
+            python3 \
+            wget
+        yum clean all
+        rm -rf /var/cache/yum/*
+
+        echo "Installing FSL ..."
+        curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
+             python3 - -d /opt/fsl -V 6.0.7.1
+
+        # update fsleyes
+        export FSLDIR=/opt/fsl
+        export PATH=$FSLDIR/bin/:$PATH
+        source $FSLDIR/etc/fslconf/fsl.sh
+        /opt/fsl/share/fsl/bin/update_fsl_package -y -u fsleyes
+

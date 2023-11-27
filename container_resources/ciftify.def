@@ -1,0 +1,77 @@
+Bootstrap: docker
+From: centos:7
+
+%files
+
+%environment
+        # CONDA
+        export CONDA_DIR=/opt/conda
+        export PATH=/opt/conda/bin:$PATH
+
+        # Ciftify
+        export PATH=$PATH:/opt/msm
+
+        # INITIALIZE [BASH Completion; Conda]
+        export PROMPT_COMMAND='. /etc/profile.d/bash_completion.sh; . /opt/conda/etc/profile.d/conda.sh; . /opt/conda/etc/profile.d/mamba.sh; conda activate base; unset PROMPT_COMMAND'
+
+
+        # add path to code folder
+        export PATH=/opt/code:$PATH
+    
+%post
+        tmp=$(mktemp -d)
+        
+        yum -y update
+        yum install -y -q \
+            epel-release \
+            which \
+            wget \
+            ca-certificates \
+             unzip \
+            git \
+            nano \
+            tree \
+            bash-completion \
+            bc
+
+
+        # Mambaforge
+        export PATH=/opt/conda/bin:$PATH
+        wget https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/Mambaforge-23.3.1-1-Linux-x86_64.sh -P ${tmp}
+        bash ${tmp}/Mambaforge-23.3.1-1-Linux-x86_64.sh -b -p /opt/conda
+        mamba update -yq -nbase conda
+        conda config --system --set auto_update_conda false
+        conda config --system --set show_channel_urls true
+        # install
+        mamba install -y  --name base \
+           "python" \
+           "nipype" \
+           "notebook" \
+           "numpy" \
+           "scipy" \
+           "nibabel=3.2"
+
+        # gradunwarp   
+        yum install -y -q \
+            gcc      
+        yum clean all
+        git clone https://github.com/Washington-University/gradunwarp.git ${tmp}/gradunwarp
+        python -m pip install --no-cache-dir -r ${tmp}/gradunwarp/requirements.txt &&
+        python -m pip install --no-cache-dir ${tmp}/gradunwarp
+
+        # Clean up
+        sync && mamba clean --all --yes && sync
+        rm -rf ~/.cache/pip/*
+
+        # Ciftify (requires workbench, fsl, freesurfer, conda)
+        mkdir -p /opt/msm
+        wget https://github.com/ecr05/MSM_HOCR/releases/download/v3.0FSL/msm_centos_v3 -P /opt/msm
+        pip install ciftify
+
+        # Clean up
+        yum clean all
+        rm -rf /var/cache/yum/*        
+        rm -rf ${tmp}
+
+%runscript
+

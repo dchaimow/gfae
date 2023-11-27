@@ -1,0 +1,56 @@
+Bootstrap: docker
+From: centos:7
+
+
+%environment
+        export CONDA_DIR=/opt/conda
+        export PATH=/opt/conda/bin:$PATH
+        export PROMPT_COMMAND='. /opt/conda/etc/profile.d/conda.sh; . /opt/conda/etc/profile.d/mamba.sh; unset PROMPT_COMMAND'
+
+%post
+        tmp=$(mktemp -d)
+        yum -y update
+        yum install -y -q \
+                epel-release \
+                which \
+                wget \
+                ca-certificates \
+                unzip \
+                git \
+                nano \
+                bc
+        yum clean all
+
+
+        # Mambaforge
+        export PATH=/opt/conda/bin:$PATH
+        wget https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/Mambaforge-23.3.1-1-Linux-x86_64.sh -P ${tmp}
+        bash ${tmp}/Mambaforge-23.3.1-1-Linux-x86_64.sh -b -p /opt/conda
+        echo $PATH
+        which conda
+        which mamba
+        mamba update -yq -nbase conda
+        conda config --system --set auto_update_conda false
+        conda config --system --set show_channel_urls true
+        # install
+        mamba install -y  --name base \
+           "python=3.11" \
+           "nipype" \
+           "notebook" \
+           "numpy" \
+           "scipy" \
+           "nibabel"
+
+        # gradunwarp   
+        yum install -y -q \
+            gcc      
+        yum clean all
+        git clone https://github.com/Washington-University/gradunwarp.git ${tmp}/gradunwarp
+        python -m pip install --no-cache-dir -r ${tmp}/gradunwarp/requirements.txt &&
+        python -m pip install --no-cache-dir ${tmp}/gradunwarp
+
+        # Clean up
+        sync && mamba clean --all --yes && sync
+        rm -rf ~/.cache/pip/*
+
+        rm -rf ${tmp}

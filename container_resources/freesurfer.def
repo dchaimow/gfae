@@ -1,0 +1,39 @@
+Bootstrap: docker
+From: centos:7
+
+%files
+        license.txt /
+
+%environment
+        export FREESURFER_HOME=/opt/freesurfer
+        export SUBJECTS_DIR=$FREESURFER_HOME/subjects
+        source $FREESURFER_HOME/SetUpFreeSurfer.sh
+        export XDG_RUNTIME_DIR=/tmp/.run_$(uuidgen)
+     
+%post
+        tmp=$(mktemp -d)
+        yum -y update
+        yum install -y -q \
+                epel-release \
+                which \
+                wget \
+                ca-certificates \
+                unzip \
+                git \
+                nano \
+                bc
+        yum clean all
+
+        # Freesurfer 7.4.1
+        yum install -y -q \
+            glx-utils \
+            mesa-dri-drivers
+        wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-CentOS7-7.4.1-1.x86_64.rpm -P ${tmp}
+        yum -y --nogpgcheck localinstall ${tmp}/freesurfer-CentOS7-7.4.1-1.x86_64.rpm
+        ln -s /usr/local/freesurfer/7.4.1-1/ /opt/freesurfer 
+        yum clean all
+        mv /license.txt /opt/freesurfer/
+        chmod a+r /opt/freesurfer/license.txt
+
+        # Clean up
+        rm -rf ${tmp}

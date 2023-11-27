@@ -1,0 +1,38 @@
+Bootstrap: docker
+From: centos:7
+
+%files
+
+
+%environment
+        export PATH=/opt/laynii:$PATH
+
+
+%post
+        tmp=$(mktemp -d)
+        
+        yum -y update
+        yum install -y -q \
+            epel-release \
+            which \
+            wget \
+            ca-certificates \
+            unzip \
+            git \
+            nano \
+            tree \
+            bc
+
+        # LAYNII
+        yum -y -q groupinstall 'Development Tools'        
+        yum -y -q install zlib-devel
+        
+        git clone --depth 1 https://github.com/layerfMRI/laynii ${tmp}/laynii
+        cd ${tmp}/laynii
+        make all
+        mv ${tmp}/laynii /opt/
+
+        # Clean up
+        yum clean all
+        rm -rf /var/cache/yum/*        
+        rm -rf ${tmp}

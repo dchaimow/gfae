@@ -1,0 +1,68 @@
+Bootstrap: docker
+From: debian:bookworm
+
+%environment
+        export FSLDIR=/opt/fsl
+        export PATH=$FSLDIR/bin/:$PATH
+        source $FSLDIR/etc/fslconf/fsl.sh
+
+        export FSLOUTPUTTYPE="NIFTI_GZ"
+        export FSLMULTIFILEQUIT="TRUE"
+        export FSLLOCKDIR=""
+        export FSLMACHINELIST=""
+        export FSLREMOTECALL=""
+        export FSLGECUDAQ="cuda.q"
+
+        export FSLWISH=/usr/bin/wish
+        export FSLTCLSH=/usr/bin/tclsh
+                 
+%post
+        tmp=$(mktemp -d)
+        
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq
+        apt-get install -y -q --no-install-recommends \
+                wget \
+                curl \
+                ca-certificates \
+                unzip \
+                bzip2 \
+                git \
+                nano \
+                tree \
+                bc \
+                which \
+                file \
+                locales \
+                locales-all
+                        
+
+        # FSL
+        apt-get install -y -q --no-install-recommends \
+                libfontconfig1 \
+                libfreetype6 \
+                libgl1-mesa-dev \
+                libgl1-mesa-dri \
+                libglu1-mesa-dev \
+                libgomp1 \
+                libice6 \
+                libopenblas-dev \
+                libxcursor1 \
+                libxft2 \
+                libxinerama1 \
+                libxrandr2 \
+                libxrender1 \
+                libxt6 \
+                xorg \
+                python3
+        
+        curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
+             python3 - -d /opt/fsl -V 6.0.7.1
+
+        # update fsleyes
+        export FSLDIR=/opt/fsl
+        /opt/fsl/bin/update_fsl_package -y -u fsleyes
+
+        # Clean up
+        rm -rf /var/lib/apt/lists/*
+        rm -rf ${tmp}
