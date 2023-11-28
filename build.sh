@@ -12,7 +12,6 @@ container_fname=$(basename $deffile .def).sif
 tmpdir=$(mktemp -d)
 cwd=$(pwd)
 
-cp license.txt $tmpdir/
 cp $deffile $tmpdir/
 cd $tmpdir
 

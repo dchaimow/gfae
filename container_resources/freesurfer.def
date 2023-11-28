@@ -2,10 +2,10 @@ Bootstrap: docker
 From: centos:7
 
 %files
-        license.txt /
 
 %environment
         export FREESURFER_HOME=/opt/freesurfer
+        export FS_LICENSE=~/license.txt
         export SUBJECTS_DIR=$FREESURFER_HOME/subjects
         source $FREESURFER_HOME/SetUpFreeSurfer.sh
         export XDG_RUNTIME_DIR=/tmp/.run_$(uuidgen)
@@ -32,8 +32,6 @@ From: centos:7
         yum -y --nogpgcheck localinstall ${tmp}/freesurfer-CentOS7-7.4.1-1.x86_64.rpm
         ln -s /usr/local/freesurfer/7.4.1-1/ /opt/freesurfer 
         yum clean all
-        mv /license.txt /opt/freesurfer/
-        chmod a+r /opt/freesurfer/license.txt
 
         # Clean up
         rm -rf ${tmp}

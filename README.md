@@ -17,7 +17,7 @@ Currently `gfae.def` is based on centos 7 and contains:
   * flask>=2.1.2 (afni)
   * flask-cors>=3.0.10 (afni)
 * FSL 6.0.7.1
-* FreeSurfer 7.4.1
+* FreeSurfer 7.4.1 (license.txt required to be present in user home directory)
 * CAT12 and SPM12 together with Matlab 2017b runtime
 * gradunwarp (Human Connectome Project version)
 * ciftify
