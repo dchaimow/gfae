@@ -165,6 +165,12 @@ From: centos:7
         python -m pip install --no-cache-dir -r ${tmp}/gradunwarp/requirements.txt &&
         python -m pip install --no-cache-dir ${tmp}/gradunwarp
 
+        # pydeface (requires FSL)
+        yum install -y -q \
+            gcc
+        python -m pip install pydeface
+        
+
         # Clean up
         sync && mamba clean --all --yes && sync
         rm -rf ~/.cache/pip/*
@@ -360,7 +366,11 @@ From: centos:7
 
         wget -O ${tmp}/firefox-latest.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"
             tar xvjf ${tmp}/firefox-latest.tar.bz2 -C /usr/local 
-            ln -s /usr/local/firefox/firefox /usr/bin/firefox 
+            ln -s /usr/local/firefox/firefox /usr/bin/firefox
+
+        # parallel
+        yum install -y -q \
+            parallel
 
         # fmri analysis
         git clone https://github.com/dchaimow/fmri-analysis /opt/fmri-analysis

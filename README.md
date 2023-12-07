@@ -26,9 +26,11 @@ Currently `gfae.def` is based on centos 7 and contains:
 * ITK-snap 3.8
 * c3d
 * dcm2niix
+* pydeface
 * laynii
 * dchaimow/fmri-analysis
 * firefox
+* parallel
 
 To consider:
 * full AFNI installation with R packages
