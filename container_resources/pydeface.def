@@ -1,0 +1,97 @@
+Bootstrap: docker
+From: centos:7
+
+
+%environment
+        export CONDA_DIR=/opt/conda
+        export PATH=/opt/conda/bin:$PATH
+        export PROMPT_COMMAND='. /opt/conda/etc/profile.d/conda.sh; . /opt/conda/etc/profile.d/mamba.sh; unset PROMPT_COMMAND'
+
+        # FSL
+        export FSLDIR=/opt/fsl
+        export PATH=$FSLDIR/bin/:$PATH
+        source $FSLDIR/etc/fslconf/fsl.sh
+        export FSLWISH=/usr/bin/wish
+        export FSLTCLSH=/usr/bin/tclsh
+
+%post
+        tmp=$(mktemp -d)
+        yum -y update
+        yum install -y -q \
+                epel-release \
+                which \
+                wget \
+                ca-certificates \
+                unzip \
+                git \
+                nano \
+                bc
+        yum clean all
+
+        # FSL
+        yum install -y -q \
+            bc \
+            bzip2 \
+            curl  \
+            dc \
+            file \
+            gtk2 \
+            libGL \
+            libGLU \
+            libICE \
+            libSM \
+            libX11 \
+            libXcursor \
+            libXext \
+            libXft \
+            libXinerama \
+            libXrandr \
+            libXt \
+            libgomp \
+            libjpeg \
+            libmng \
+            libpng12 \
+            nano \
+            openblas-serial \
+            glx-utils \
+            mesa-dri-drivers \
+            tcl \
+            tk \
+            python3 \
+            wget
+        yum clean all
+        rm -rf /var/cache/yum/*
+
+        echo "Installing FSL ..."
+        curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
+             python3 - -d /opt/fsl -V 6.0.7.1
+
+        # Mambaforge
+        export PATH=/opt/conda/bin:$PATH
+        wget https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/Mambaforge-23.3.1-1-Linux-x86_64.sh -P ${tmp}
+        bash ${tmp}/Mambaforge-23.3.1-1-Linux-x86_64.sh -b -p /opt/conda
+        echo $PATH
+        which conda
+        which mamba
+        mamba update -yq -nbase conda
+        conda config --system --set auto_update_conda false
+        conda config --system --set show_channel_urls true
+        # install
+        mamba install -y  --name base \
+           "python=3.11" \
+           "nipype" \
+           "notebook" \
+           "numpy" \
+           "scipy" \
+           "nibabel"
+
+        # pydeface   
+        yum install -y -q \
+            gcc
+        python -m pip install pydeface
+
+        # Clean up
+        sync && mamba clean --all --yes && sync
+        rm -rf ~/.cache/pip/*
+
+        rm -rf ${tmp}
