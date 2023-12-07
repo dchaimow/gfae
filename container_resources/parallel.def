@@ -1,0 +1,36 @@
+Bootstrap: docker
+From: centos:7
+
+%files
+
+
+%environment
+         export XDG_RUNTIME_DIR=/tmp/.run_$(uuidgen)
+
+%post
+        tmp=$(mktemp -d)
+        
+        yum -y update
+        yum install -y -q \
+            epel-release \
+            which \
+            wget \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            tree \
+            bc
+
+        yum install -y -q \
+            parallel
+
+
+
+ 
+        # Clean up
+        yum clean all
+        rm -rf /var/cache/yum/*        
+        rm -rf ${tmp}
+            
