@@ -244,10 +244,11 @@ From: rockylinux:8
             mesa-dri-drivers \
             tcl \
             tk \
-            python \
+            python3 \
             wget 
             
-
+            alternatives --set python /usr/bin/python3
+            
         # Connectome Workbench
         wget https://www.humanconnectome.org/storage/app/media/workbench/workbench-rh_linux64-v1.5.0.zip -P ${tmp}
         unzip -q ${tmp}/workbench-rh_linux64-v1.5.0.zip -d ${tmp}
@@ -386,3 +387,4 @@ From: rockylinux:8
 
 %runscript
 
+    
