@@ -83,185 +83,185 @@ From: rockylinux:8
             bc \
             bash-completion
 
-        # LAYNII 
-        yum -y -q groupinstall 'Development Tools'        
-        yum -y -q install zlib-devel
+        # # LAYNII 
+        # yum -y -q groupinstall 'Development Tools'        
+        # yum -y -q install zlib-devel
         
-        git clone --depth 1 https://github.com/layerfMRI/laynii ${tmp}/laynii
-        pushd ${tmp}/laynii
-        make all
-        popd
-        mv ${tmp}/laynii /opt/
+        # git clone --depth 1 https://github.com/layerfMRI/laynii ${tmp}/laynii
+        # pushd ${tmp}/laynii
+        # make all
+        # popd
+        # mv ${tmp}/laynii /opt/
 
-        # FSL 6.0.7.1
-        yum install -y -q \
-            bc \
-            bzip2 \
-            curl \
-            file \
-            gtk2 \
-            libGL \
-            libGLU \
-            libICE \
-            libSM \
-            libX11 \
-            libXcursor \
-            libXext \
-            libXft \
-            libXinerama \
-            libXrandr \
-            libXt \
-            libgomp \
-            libjpeg \
-            libmng \
-            libpng12 \
-            nano \
-            openblas \
-            glx-utils \
-            mesa-dri-drivers \
-            tcl \
-            tk \
-            python3 \
-            wget
+        # # FSL 6.0.7.1
+        # yum install -y -q \
+        #     bc \
+        #     bzip2 \
+        #     curl \
+        #     file \
+        #     gtk2 \
+        #     libGL \
+        #     libGLU \
+        #     libICE \
+        #     libSM \
+        #     libX11 \
+        #     libXcursor \
+        #     libXext \
+        #     libXft \
+        #     libXinerama \
+        #     libXrandr \
+        #     libXt \
+        #     libgomp \
+        #     libjpeg \
+        #     libmng \
+        #     libpng12 \
+        #     nano \
+        #     openblas \
+        #     glx-utils \
+        #     mesa-dri-drivers \
+        #     tcl \
+        #     tk \
+        #     python3 \
+        #     wget
         
-        alternatives --set python /usr/bin/python3
+        # alternatives --set python /usr/bin/python3
 
-        curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
-             python3 - -d /opt/fsl -V 6.0.7.7
+        # curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
+        #      python3 - -d /opt/fsl -V 6.0.7.7
 
-        # update fsleyes
-        #export FSLDIR=/opt/fsl
-        #export PATH=$FSLDIR/bin/:$PATH
-        #source $FSLDIR/etc/fslconf/fsl.sh
-        #/opt/fsl/share/fsl/bin/update_fsl_package -y -u fsleyes
+        # # update fsleyes
+        # #export FSLDIR=/opt/fsl
+        # #export PATH=$FSLDIR/bin/:$PATH
+        # #source $FSLDIR/etc/fslconf/fsl.sh
+        # #/opt/fsl/share/fsl/bin/update_fsl_package -y -u fsleyes
 
 
-        # Mambaforge
-        export PATH=/opt/conda/bin:$PATH
-        wget https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/Mambaforge-23.3.1-1-Linux-x86_64.sh -P ${tmp}
-        bash ${tmp}/Mambaforge-23.3.1-1-Linux-x86_64.sh -b -p /opt/conda
-        mamba update -yq -nbase conda
-        conda config --system --set auto_update_conda false
-        conda config --system --set show_channel_urls true
-        # install; nibabel 3.2 because of ciftify issue
-        mamba install -y  --name base \
-              "python" \
-              "nipype" \
-              "notebook" \
-              "jupyterlab" \
-              "numpy" \
-              "scipy" \
-              "nibabel=3.2" \
-              "seaborn>=0.9.0" \
-              "nilearn>=0.5.0" \
-              "matplotlib>=2.2.2" \
-              "pandas>=0.23.4" \
-              "flask>=2.1.2" \
-              "flask-cors>=3.0.10"
+        # # Mambaforge
+        # export PATH=/opt/conda/bin:$PATH
+        # wget https://github.com/conda-forge/miniforge/releases/download/23.3.1-1/Mambaforge-23.3.1-1-Linux-x86_64.sh -P ${tmp}
+        # bash ${tmp}/Mambaforge-23.3.1-1-Linux-x86_64.sh -b -p /opt/conda
+        # mamba update -yq -nbase conda
+        # conda config --system --set auto_update_conda false
+        # conda config --system --set show_channel_urls true
+        # # install; nibabel 3.2 because of ciftify issue
+        # mamba install -y  --name base \
+        #       "python" \
+        #       "nipype" \
+        #       "notebook" \
+        #       "jupyterlab" \
+        #       "numpy" \
+        #       "scipy" \
+        #       "nibabel=3.2" \
+        #       "seaborn>=0.9.0" \
+        #       "nilearn>=0.5.0" \
+        #       "matplotlib>=2.2.2" \
+        #       "pandas>=0.23.4" \
+        #       "flask>=2.1.2" \
+        #       "flask-cors>=3.0.10"
            
-        # gradunwarp   
-        yum install -y -q \
-            gcc      
-        yum clean all
-        git clone https://github.com/Washington-University/gradunwarp.git ${tmp}/gradunwarp
-        python -m pip install --no-cache-dir -r ${tmp}/gradunwarp/requirements.txt &&
-        python -m pip install --no-cache-dir ${tmp}/gradunwarp
+        # # gradunwarp   
+        # yum install -y -q \
+        #     gcc      
+        # yum clean all
+        # git clone https://github.com/Washington-University/gradunwarp.git ${tmp}/gradunwarp
+        # python -m pip install --no-cache-dir -r ${tmp}/gradunwarp/requirements.txt &&
+        # python -m pip install --no-cache-dir ${tmp}/gradunwarp
 
-        # pydeface (requires FSL)
-        yum install -y -q \
-            gcc
-        python -m pip install pydeface
+        # # pydeface (requires FSL)
+        # yum install -y -q \
+        #     gcc
+        # python -m pip install pydeface
         
 
-        # Clean up
-        sync && mamba clean --all --yes && sync
-        rm -rf ~/.cache/pip/*
+        # # Clean up
+        # sync && mamba clean --all --yes && sync
+        # rm -rf ~/.cache/pip/*
 
 
-        # Matlab Runtime
-        yum install -y -q \
-            libXext.x86_64 \
-            libXmu \
-            libXpm \
-            libXt.x86_64 \
-            java-1.8.0-openjdk \
-            dbus-x11
+        # # Matlab Runtime
+        # yum install -y -q \
+        #     libXext.x86_64 \
+        #     libXmu \
+        #     libXpm \
+        #     libXt.x86_64 \
+        #     java-1.8.0-openjdk \
+        #     dbus-x11
 
-        mkdir -p opt/mcr
-        wget https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip -P ${tmp}
-        unzip -q ${tmp}/MCR_R2017b_glnxa64_installer.zip -d ${tmp}
-        ${tmp}/install -mode silent -agreeToLicense yes -destinationFolder /opt/mcr
+        # mkdir -p opt/mcr
+        # wget https://ssd.mathworks.com/supportfiles/downloads/R2017b/deployment_files/R2017b/installers/glnxa64/MCR_R2017b_glnxa64_installer.zip -P ${tmp}
+        # unzip -q ${tmp}/MCR_R2017b_glnxa64_installer.zip -d ${tmp}
+        # ${tmp}/install -mode silent -agreeToLicense yes -destinationFolder /opt/mcr
         
-        # SPM12 with CAT12
-        wget https://www.neuro.uni-jena.de/cat12/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -P ${tmp}
-        unzip -q ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -d ${tmp}
-        mv ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux /opt/spm12
-        chmod +x /opt/spm12/run_spm12.sh /opt/spm12/spm12 
-        # test call (to build spm12.ctf while we have write permissions)
-        /opt/spm12/run_spm12.sh /opt/mcr/v93 function exit
-        # set up single spm executable
-        printf '#!/bin/bash\n/opt/spm12/run_spm12.sh /opt/mcr/v93 "$@"' > \
-               /opt/spm12/spm12_mcr/bin/spm12
-        chmod +x /opt/spm12/spm12_mcr/bin/spm12
-        ln -s /opt/spm12/spm12_mcr/bin/spm12 /usr/local/bin/spm12
+        # # SPM12 with CAT12
+        # wget https://www.neuro.uni-jena.de/cat12/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -P ${tmp}
+        # unzip -q ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -d ${tmp}
+        # mv ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux /opt/spm12
+        # chmod +x /opt/spm12/run_spm12.sh /opt/spm12/spm12 
+        # # test call (to build spm12.ctf while we have write permissions)
+        # /opt/spm12/run_spm12.sh /opt/mcr/v93 function exit
+        # # set up single spm executable
+        # printf '#!/bin/bash\n/opt/spm12/run_spm12.sh /opt/mcr/v93 "$@"' > \
+        #        /opt/spm12/spm12_mcr/bin/spm12
+        # chmod +x /opt/spm12/spm12_mcr/bin/spm12
+        # ln -s /opt/spm12/spm12_mcr/bin/spm12 /usr/local/bin/spm12
 
-        # Freesurfer 7.4.1
-        yum install -y -q \
-            glx-utils \
-            mesa-dri-drivers
-        wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-CentOS7-7.4.1-1.x86_64.rpm -P ${tmp} \
-            --no-check-certificate
-        yum -y --nogpgcheck localinstall ${tmp}/freesurfer-CentOS7-7.4.1-1.x86_64.rpm
-        ln -s /usr/local/freesurfer/7.4.1-1/ /opt/freesurfer 
-        yum clean all
+        # # Freesurfer 7.4.1
+        # yum install -y -q \
+        #     glx-utils \
+        #     mesa-dri-drivers
+        # wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-CentOS7-7.4.1-1.x86_64.rpm -P ${tmp} \
+        #     --no-check-certificate
+        # yum -y --nogpgcheck localinstall ${tmp}/freesurfer-CentOS7-7.4.1-1.x86_64.rpm
+        # ln -s /usr/local/freesurfer/7.4.1-1/ /opt/freesurfer 
+        # yum clean all
 
-        # Workbench
-        yum install -y -q \
-            bash-completion \
-            freetype \
-            libGLU \
-            libX11 \
-            libglvnd-glx \
-            mesa-libGLU \
-            libGL \
-            gtk2 \
-            libICE \
-            libSM \
-            libX11 \
-            libXcursor \
-            libXext \
-            libXft \
-            libXinerama \
-            libXrandr \
-            libXt \
-            libgomp \
-            libjpeg \
-            libmng \
-            libpng12 \
-            nano \
-            openblas \
-            glx-utils \
-            mesa-dri-drivers \
-            tcl \
-            tk \
-            python3 \
-            wget 
+        # # Workbench
+        # yum install -y -q \
+        #     bash-completion \
+        #     freetype \
+        #     libGLU \
+        #     libX11 \
+        #     libglvnd-glx \
+        #     mesa-libGLU \
+        #     libGL \
+        #     gtk2 \
+        #     libICE \
+        #     libSM \
+        #     libX11 \
+        #     libXcursor \
+        #     libXext \
+        #     libXft \
+        #     libXinerama \
+        #     libXrandr \
+        #     libXt \
+        #     libgomp \
+        #     libjpeg \
+        #     libmng \
+        #     libpng12 \
+        #     nano \
+        #     openblas \
+        #     glx-utils \
+        #     mesa-dri-drivers \
+        #     tcl \
+        #     tk \
+        #     python3 \
+        #     wget 
             
-            alternatives --set python /usr/bin/python3
+        #     alternatives --set python /usr/bin/python3
             
-        # Connectome Workbench
-        wget https://www.humanconnectome.org/storage/app/media/workbench/workbench-rh_linux64-v1.5.0.zip -P ${tmp}
-        unzip -q ${tmp}/workbench-rh_linux64-v1.5.0.zip -d ${tmp}
-        mv ${tmp}/workbench /opt/
-        cp /opt/workbench/exe_rh_linux64/bashcomplete_wb_command /usr/share/bash-completion/completions/wb_command
+        # # Connectome Workbench
+        # wget https://www.humanconnectome.org/storage/app/media/workbench/workbench-rh_linux64-v1.5.0.zip -P ${tmp}
+        # unzip -q ${tmp}/workbench-rh_linux64-v1.5.0.zip -d ${tmp}
+        # mv ${tmp}/workbench /opt/
+        # cp /opt/workbench/exe_rh_linux64/bashcomplete_wb_command /usr/share/bash-completion/completions/wb_command
         
-        ln -s -f /usr/lib64/libstdc++.so.6 /opt/workbench/libs_rh_linux64/libstdc++.so.6
+        # ln -s -f /usr/lib64/libstdc++.so.6 /opt/workbench/libs_rh_linux64/libstdc++.so.6
 
 
-        # Ciftify (requires workbench, fsl, freesurfer, conda)
-        mkdir -p /opt/msm
-        wget https://github.com/ecr05/MSM_HOCR/releases/download/v3.0FSL/msm_centos_v3 -P /opt/msm
-        pip install ciftify
+        # # Ciftify (requires workbench, fsl, freesurfer, conda)
+        # mkdir -p /opt/msm
+        # wget https://github.com/ecr05/MSM_HOCR/releases/download/v3.0FSL/msm_centos_v3 -P /opt/msm
+        # pip install ciftify
 
 
         # AFNI
