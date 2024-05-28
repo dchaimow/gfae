@@ -289,6 +289,8 @@ From: rockylinux:8
         wget https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries -P ${tmp}
         tcsh ${tmp}/@update.afni.binaries -package linux_rocky_8 -bindir /opt/afni -do_extras    
 
+        export PATH="/opt/afni:$PATH"
+
         export R_LIBS=/opt/R
         mkdir  $R_LIBS
         rPkgsInstall -pkgs ALL
