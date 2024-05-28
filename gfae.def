@@ -73,6 +73,7 @@ From: rockylinux:8
         yum install -y -q \
             epel-release \
             findutils \
+            diffutils \
             which \
             wget \
             ca-certificates \
@@ -286,7 +287,7 @@ From: rockylinux:8
         yum install -y epel-release R-devel
 
         wget https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries -P ${tmp}
-        tcsh ${tmp}/@update.afni.binaries -package linux_rocky_8 -bin_dir /opt/afni -do_extras    
+        tcsh ${tmp}/@update.afni.binaries -package linux_rocky_8 -bindir /opt/afni -do_extras    
 
         export R_LIBS=/opt/R
         mkdir  $R_LIBS
