@@ -390,34 +390,34 @@ From: rockylinux:8
         | tar -xz -C /opt/convert3d --strip-components 1
 
 
-        # Firefox
-        yum install -y -q \
-            glibc \
-            gtk3 \
-            dbus-glib \
-            glib \
-            libstdc++ \
-            libXtst \
-            libX11 \
-            mesa-dri-drivers \
-            mesa-libEGL \
-            glx-utils \
-            dbus \
-            networkmanager \
-            pciutils-libs \
-            pulseaudio
+        # # Firefox
+        # yum install -y -q \
+        #     glibc \
+        #     gtk3 \
+        #     dbus-glib \
+        #     glib \
+        #     libstdc++ \
+        #     libXtst \
+        #     libX11 \
+        #     mesa-dri-drivers \
+        #     mesa-libEGL \
+        #     glx-utils \
+        #     dbus \
+        #     networkmanager \
+        #     pciutils-libs \
+        #     pulseaudio
 
-        wget -O ${tmp}/firefox-latest.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"
-            tar xvjf ${tmp}/firefox-latest.tar.bz2 -C /usr/local 
-            ln -s /usr/local/firefox/firefox /usr/bin/firefox
+        # wget -O ${tmp}/firefox-latest.tar.bz2 "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"
+        #     tar xvjf ${tmp}/firefox-latest.tar.bz2 -C /usr/local 
+        #     ln -s /usr/local/firefox/firefox /usr/bin/firefox
 
-        # parallel
-        yum install -y -q \
-            parallel
+        # # parallel
+        # yum install -y -q \
+        #     parallel
 
-        # fmri analysis
-        git clone https://github.com/dchaimow/fmri-analysis /opt/fmri-analysis
-        chmod -R +x /opt/fmri-analysis
+        # # fmri analysis
+        # git clone https://github.com/dchaimow/fmri-analysis /opt/fmri-analysis
+        # chmod -R +x /opt/fmri-analysis
 
         # Clean up
         yum clean all
