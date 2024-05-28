@@ -265,7 +265,7 @@ From: rockylinux:8
 
 
         # AFNI
-        yum install -y -q
+        yum install -y -q \
             tcsh \
             gcc \
             motif-devel \
