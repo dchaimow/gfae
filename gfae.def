@@ -335,29 +335,29 @@ From: rockylinux:8
         #| tar -xz -C /opt/afni --strip-components 1
 
 
-        # CMake
-        mkdir -p /opt/cmake
-        wget https://github.com/Kitware/CMake/releases/download/v3.28.0-rc5/cmake-3.28.0-rc5-linux-x86_64.tar.gz -P ${tmp}
-        tar -xz -C /opt/cmake --strip-components 1 -f ${tmp}/cmake-3.28.0-rc5-linux-x86_64.tar.gz
-        export PATH=/opt/cmake/bin:$PATH
+        # # CMake
+        # mkdir -p /opt/cmake
+        # wget https://github.com/Kitware/CMake/releases/download/v3.28.0-rc5/cmake-3.28.0-rc5-linux-x86_64.tar.gz -P ${tmp}
+        # tar -xz -C /opt/cmake --strip-components 1 -f ${tmp}/cmake-3.28.0-rc5-linux-x86_64.tar.gz
+        # export PATH=/opt/cmake/bin:$PATH
 
-        #yum -y -q install centos-release-scl
-        #yum -y -q install devtoolset-7-gcc-c++
-        yum -y groupinstall 'Development Tools'        
+        # #yum -y -q install centos-release-scl
+        # #yum -y -q install devtoolset-7-gcc-c++
+        # yum -y groupinstall 'Development Tools'        
         
-        # ANTs
-        git clone https://github.com/ANTsX/ANTs.git ${tmp}/ANTs
-        mkdir -p ${tmp}/build 
-        cd ${tmp}/build
-        #scl enable devtoolset-7 "cmake \
-        #      -DCMAKE_INSTALL_PREFIX=/opt/ants \
-        #      ../ANTs 2>&1 | tee cmake.log"
-        cmake -DCMAKE_INSTALL_PREFIX=/opt/ants \
-            ../ANTs 2>&1 | tee cmake.log
-        #scl enable devtoolset-7 "make -j 4 2>&1 | tee build.log"
-        make -j 4 2>&1 | tee build.log
-        cd ANTS-build
-        make install 2>&1 | tee install.log
+        # # ANTs
+        # git clone https://github.com/ANTsX/ANTs.git ${tmp}/ANTs
+        # mkdir -p ${tmp}/build 
+        # cd ${tmp}/build
+        # #scl enable devtoolset-7 "cmake \
+        # #      -DCMAKE_INSTALL_PREFIX=/opt/ants \
+        # #      ../ANTs 2>&1 | tee cmake.log"
+        # cmake -DCMAKE_INSTALL_PREFIX=/opt/ants \
+        #     ../ANTs 2>&1 | tee cmake.log
+        # #scl enable devtoolset-7 "make -j 4 2>&1 | tee build.log"
+        # make -j 4 2>&1 | tee build.log
+        # cd ANTS-build
+        # make install 2>&1 | tee install.log
 
         # ITK-SNAP
         yum install -y -q \
