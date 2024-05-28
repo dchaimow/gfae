@@ -285,7 +285,7 @@ From: rockylinux:8
                 
         yum install -y epel-release R-devel
 
-        curl -O ${tmp}/@update.afni.binaries https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries
+        wget https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries -P ${tmp}
         tcsh ${tmp}/@update.afni.binaries -package linux_rocky_8 -bin_dir /opt/afni -do_extras    
 
         export R_LIBS=/opt/R
