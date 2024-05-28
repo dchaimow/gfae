@@ -121,7 +121,7 @@ From: rockylinux:8
             mesa-dri-drivers \
             tcl \
             tk \
-            python \
+            python3 \
             wget
         
         alternatives --set python /usr/bin/python3
