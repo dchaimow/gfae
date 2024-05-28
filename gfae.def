@@ -360,8 +360,8 @@ From: rockylinux:9
         # make install 2>&1 | tee install.log
 
         # ITK-SNAP
-        #yum install -y -q \
-        #    qt5-qtbase-gui libXt libpng12 libGLU glx-utils mesa-dri-drivers libXrender
+        yum install -y -q \
+            qt5-qtbase-gui libXt libpng12 libGLU glx-utils mesa-dri-drivers libXrender
 
             
         #mkdir -p /opt/itk-snap
