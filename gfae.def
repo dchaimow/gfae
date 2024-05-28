@@ -266,34 +266,36 @@ From: rockylinux:8
 
 
         # AFNI
-        yum config-manager --set-enabled powertools
+        # yum config-manager --set-enabled powertools
 
-        yum install -y -q \
-            tcsh \
-            gcc \
-            motif-devel \
-            gsl-devel \
-            libXpm-devel \
-            mesa-libGLw-devel \
-            mesa-libGLU-devel \
-            libXi-devel \
-            glib2-devel \
-            python39 python3-matplotlib \
-            python3-flask python3-flask-cors \
-            python3-numpy
+        # yum install -y -q \
+        #     tcsh \
+        #     gcc \
+        #     motif-devel \
+        #     gsl-devel \
+        #     libXpm-devel \
+        #     mesa-libGLw-devel \
+        #     mesa-libGLU-devel \
+        #     libXi-devel \
+        #     glib2-devel \
+        #     python39 python3-matplotlib \
+        #     python3-flask python3-flask-cors \
+        #     python3-numpy
 
-        alternatives --set python /usr/bin/python3
+        # alternatives --set python /usr/bin/python3
                 
-        yum install -y epel-release R-devel
+        # yum install -y epel-release R-devel
 
-        wget https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries -P ${tmp}
-        tcsh ${tmp}/@update.afni.binaries -package linux_rocky_8 -bindir /opt/afni -do_extras    
+        # wget https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries -P ${tmp}
+        # tcsh ${tmp}/@update.afni.binaries -package linux_rocky_8 -bindir /opt/afni -do_extras    
 
-        export PATH="/opt/afni:$PATH"
+        # export PATH="/opt/afni:$PATH"
 
-        export R_LIBS=/opt/R
-        mkdir  $R_LIBS
-        rPkgsInstall -pkgs ALL
+        # export R_LIBS=/opt/R
+        # mkdir  $R_LIBS
+        # rPkgsInstall -pkgs ALL
+
+# --- AFNI option 1 until here
 
         #yum install -y -q \
         #    R \
@@ -339,18 +341,21 @@ From: rockylinux:8
         tar -xz -C /opt/cmake --strip-components 1 -f ${tmp}/cmake-3.28.0-rc5-linux-x86_64.tar.gz
         export PATH=/opt/cmake/bin:$PATH
 
-        yum -y -q install centos-release-scl
-        yum -y -q install devtoolset-7-gcc-c++
+        #yum -y -q install centos-release-scl
+        #yum -y -q install devtoolset-7-gcc-c++
         yum -y groupinstall 'Development Tools'        
         
         # ANTs
         git clone https://github.com/ANTsX/ANTs.git ${tmp}/ANTs
         mkdir -p ${tmp}/build 
         cd ${tmp}/build
-        scl enable devtoolset-7 "cmake \
-              -DCMAKE_INSTALL_PREFIX=/opt/ants \
-              ../ANTs 2>&1 | tee cmake.log"
-        scl enable devtoolset-7 "make -j 4 2>&1 | tee build.log"
+        #scl enable devtoolset-7 "cmake \
+        #      -DCMAKE_INSTALL_PREFIX=/opt/ants \
+        #      ../ANTs 2>&1 | tee cmake.log"
+        cmake -DCMAKE_INSTALL_PREFIX=/opt/ants \
+            ../ANTs 2>&1 | tee cmake.log
+        #scl enable devtoolset-7 "make -j 4 2>&1 | tee build.log"
+        make -j 4 2>&1 | tee build.log
         cd ANTS-build
         make install 2>&1 | tee install.log
 
