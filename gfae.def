@@ -265,42 +265,69 @@ From: rockylinux:8
 
 
         # AFNI
-        yum install -y -q \
-            R \
-            R-devel \
-            cmake \
-            curl \
-            ed \
-            gsl \
-            libGLU \
-            libXp \
-            libXpm \
-            libcurl-devel \
-            libgomp \
-            libjpeg-turbo-devel \
-            libpng12 \
-            mesa-dri-drivers \
-            mesa-libEGL \
-            mesa-libGLw \
-            ncurses-compat-libs \
-            netpbm-progs \
-            openmotif \
-            openssl-devel \
-            PyQt4 \
+        yum install -y -q
             tcsh \
-            udunits2-devel \
-            unzip \
-            wget \
-            which \
-            xorg-x11-fonts-misc \
-            xorg-x11-server-Xvfb
+            gcc \
+            motif-devel \
+            gsl-devel \
+            libXpm-devel \
+            mesa-libGLw-devel \
+            mesa-libGLU-devel \
+            libXi-devel \
+            glib2-devel \
+            python39 python3-matplotlib \
+            python3-flask python3-flask-cors \
+            python3-numpy
 
-        yum localinstall -y -q --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
-        yum install -y -q ffmpeg
+        alternatives --set python /usr/bin/python3
+        
+        yum config-manager --set-enabled powertools
+        
+        yum install -y epel-release R-devel
+
+        curl -O ${tmp}/@update.afni.binaries https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries
+        tcsh ${tmp}/@update.afni.binaries -package linux_rocky_8 -bin_dir /opt/afni -do_extras    
+
+        export R_LIBS=/opt/R
+        mkdir  $R_LIBS
+        rPkgsInstall -pkgs ALL
+
+        #yum install -y -q \
+        #    R \
+        #    R-devel \
+        #    cmake \
+        #    curl \
+        #    ed \
+        #    gsl \
+        #    libGLU \
+        #    libXp \
+        #    libXpm \
+        #    libcurl-devel \
+        #    libgomp \
+        #    libjpeg-turbo-devel \
+        #    libpng12 \
+        #    mesa-dri-drivers \
+        #    mesa-libEGL \
+        #    mesa-libGLw \
+        #    ncurses-compat-libs \
+        #    netpbm-progs \
+        #    openmotif \
+        #    openssl-devel \
+        ##    PyQt4 \
+        #    tcsh \
+        #    udunits2-devel \
+        #    unzip \
+        #    wget \
+        #    which \
+        #    xorg-x11-fonts-misc \
+        #    xorg-x11-server-Xvfb
+
+        #yum localinstall -y -q --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
+        #yum install -y -q ffmpeg
             
-        mkdir -p /opt/afni
-        curl -fL https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
-        | tar -xz -C /opt/afni --strip-components 1
+        #mkdir -p /opt/afni
+        #curl -fL https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
+        #| tar -xz -C /opt/afni --strip-components 1
 
 
         # CMake
