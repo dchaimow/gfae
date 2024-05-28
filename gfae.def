@@ -360,19 +360,19 @@ From: rockylinux:8
         # make install 2>&1 | tee install.log
 
         # ITK-SNAP
-        #yum install -y -q \
-        #    qt5-qtbase-gui libXt6 libXt libpng12 libGLU glx-utils mesa-dri-drivers libXrender
+        yum install -y -q \
+            qt5-qtbase-gui libXt6 libXt libpng12 libGLU glx-utils mesa-dri-drivers libXrender
 
             
-        #mkdir -p /opt/itk-snap
-        #curl -fsSL --retry 5 \
-        #     https://deac-ams.dl.sourceforge.net/project/itk-snap/itk-snap/3.8.0/itksnap-3.8.0-20190612-Linux-x86_64.tar.gz \
-        #     | tar -xz --strip-components=1 -C /opt/itk-snap
-
         mkdir -p /opt/itk-snap
         curl -fsSL --retry 5 \
-             https://deac-ams.dl.sourceforge.net/project/itk-snap/itk-snap/4.2.0/itksnap-4.2.0-20240422-Linux-gcc64.tar.gz \
+             https://deac-ams.dl.sourceforge.net/project/itk-snap/itk-snap/3.8.0/itksnap-3.8.0-20190612-Linux-x86_64.tar.gz \
              | tar -xz --strip-components=1 -C /opt/itk-snap
+
+        #mkdir -p /opt/itk-snap
+        #curl -fsSL --retry 5 \
+        #     https://deac-ams.dl.sourceforge.net/project/itk-snap/itk-snap/4.2.0/itksnap-4.2.0-20240422-Linux-gcc64.tar.gz \
+        #     | tar -xz --strip-components=1 -C /opt/itk-snap
 
         mkdir -p /opt/dcm2niix
         cd /opt/dcm2niix
