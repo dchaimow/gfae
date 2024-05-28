@@ -361,7 +361,7 @@ From: rockylinux:9
 
         # ITK-SNAP
         yum install -y -q \
-            qt5-qtbase-gui libXt libpng12 libGLU glx-utils mesa-dri-drivers libXrender
+            qt5-qtbase-gui libXt libglvnd-opengl libpng12 libGLU glx-utils mesa-dri-drivers libXrender
 
             
         #mkdir -p /opt/itk-snap
