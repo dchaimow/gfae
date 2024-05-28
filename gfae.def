@@ -127,13 +127,13 @@ From: rockylinux:8
         alternatives --set python /usr/bin/python3
 
         curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
-             python3 - -d /opt/fsl -V 6.0.7.1
+             python3 - -d /opt/fsl -V 6.0.7.7
 
         # update fsleyes
-        export FSLDIR=/opt/fsl
-        export PATH=$FSLDIR/bin/:$PATH
-        source $FSLDIR/etc/fslconf/fsl.sh
-        /opt/fsl/share/fsl/bin/update_fsl_package -y -u fsleyes
+        #export FSLDIR=/opt/fsl
+        #export PATH=$FSLDIR/bin/:$PATH
+        #source $FSLDIR/etc/fslconf/fsl.sh
+        #/opt/fsl/share/fsl/bin/update_fsl_package -y -u fsleyes
 
 
         # Mambaforge
