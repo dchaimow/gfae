@@ -1,7 +1,7 @@
 # Generic fmri analysis environment
 This is a repo template for container based fMRI analysis development. `gfae.def` defines a singularity container including a set of useful fMRI analysis software. `container_resource` contains singularity definition files for individual software packages, meant to assist in adapting `gfae.def` to your own needs.
 
-Currently `gfae.def` is based on centos 7 and contains:
+Currently `gfae.def` is based on rocky linux 8 and contains:
 * conda via mambaforge, with packages installed in base environment (here only explicitly conda installed packages):
   * python
   * nipype
@@ -16,12 +16,12 @@ Currently `gfae.def` is based on centos 7 and contains:
   * pandas>=0.23.4 (ciftify)
   * flask>=2.1.2 (afni)
   * flask-cors>=3.0.10 (afni)
-* FSL 6.0.7.1
+* FSL 6.0.7.7
 * FreeSurfer 7.4.1 (license.txt required to be present in user home directory)
 * CAT12 and SPM12 together with Matlab 2017b runtime
 * gradunwarp (Human Connectome Project version)
 * ciftify
-* AFNI (neurodocker installation without all R packages)
+* AFNI
 * ANTs
 * ITK-snap 3.8
 * c3d
@@ -33,7 +33,6 @@ Currently `gfae.def` is based on centos 7 and contains:
 * parallel
 
 To consider:
-* full AFNI installation with R packages
 * ITK-snap 4 (may require newer base system)
 * nighres
 * code editor (e.g. emacs)

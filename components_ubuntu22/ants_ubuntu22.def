@@ -1,0 +1,50 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\e[0;34ants> \e[0m"
+
+    # ANTS
+    export PATH=/opt/ants/bin:$PATH
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all  
+    
+    # ANTs
+    apt-get install -y build-essential cmake 
+
+    git clone https://github.com/ANTsX/ANTs.git ${tmp}/ANTs
+    mkdir -p ${tmp}/build 
+    cd ${tmp}/build
+    cmake -DCMAKE_INSTALL_PREFIX=/opt/ants \
+        ../ANTs 2>&1 | tee cmake.log
+    make -j 4 2>&1 | tee build.log
+    cd ANTS-build
+    make install 2>&1 | tee install.log
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

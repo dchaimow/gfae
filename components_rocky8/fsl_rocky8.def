@@ -1,0 +1,104 @@
+Bootstrap: docker
+From: rockylinux:8
+
+%files
+        environment.yml /opt/environment.yml
+
+        
+%environment
+        # CONDA
+        export CONDA_DIR=/opt/conda
+        export PATH=/opt/conda/bin:$PATH
+
+        # FSL
+        export FSLDIR=/opt/fsl
+        export PATH=$FSLDIR/bin/:$PATH
+        source $FSLDIR/etc/fslconf/fsl.sh
+
+        # TCL/TK (for FSL, reset by Freesurfer)
+        #export FSLWISH=/usr/bin/wish
+        #export FSLTCLSH=/usr/bin/tclsh
+
+        # INITIALIZE [BASH Completion; Conda]
+        export PROMPT_COMMAND='. /etc/profile.d/bash_completion.sh; . /opt/conda/etc/profile.d/conda.sh; . /opt/conda/etc/profile.d/conda.sh; conda activate base; unset PROMPT_COMMAND'
+    
+%post
+        tmp=$(mktemp -d)
+        
+        yum -y update -q
+        yum install -y -q \
+            epel-release \
+            findutils \
+            diffutils \
+            which \
+            wget \
+            ca-certificates \
+            unzip \
+            git \
+            nano \
+            tree \
+            bc \
+            bash-completion
+
+        # Condaforge v 24.3.0
+        export PATH=/opt/conda/bin:$PATH
+        wget https://github.com/conda-forge/miniforge/releases/download/24.3.0-0/Miniforge3-24.3.0-0-Linux-x86_64.sh -P ${tmp}
+        bash ${tmp}/Miniforge3-24.3.0-0-Linux-x86_64.sh -b -p /opt/conda
+        conda update -yq -nbase conda
+        conda config --system --set auto_update_conda false
+        conda config --system --set show_channel_urls true
+        . /opt/conda/etc/profile.d/conda.sh
+        conda activate base
+        # conda environment from environment.yml
+        conda env update --file /opt/environment.yml
+    
+        # Conda clean up
+        sync && conda clean --all --yes && sync
+        rm -rf ~/.cache/pip/*
+        rm /opt/environment.yml
+
+        # FSL 6.0.7.13
+        yum install -y -q \
+            bc \
+            bzip2 \
+            curl \
+            file \
+            gtk2 \
+            libGL \
+            libGLU \
+            libICE \
+            libSM \
+            libX11 \
+            libXcursor \
+            libXext \
+            libXft \
+            libXinerama \
+            libXrandr \
+            libXt \
+            libgomp \
+            libjpeg \
+            libmng \
+            libpng12 \
+            nano \
+            openblas \
+            glx-utils \
+            mesa-dri-drivers \
+            tcl \
+            tk \
+            wget
+        
+        yum install -y file which libpng12 libmng mesa-libGL-devel libgomp libquadmath \
+            openblas libSM gtk2 mesa-dri-drivers  \
+            glx-utils libmng-devel libpng-devel gtk2 pulseaudio libnvidia-gl-460
+        
+        curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
+             python - -d /opt/fsl -V 6.0.7.13
+
+        # Clean up
+        yum clean all
+        rm -rf /var/cache/yum/*        
+        rm -rf ${tmp}
+
+%runscript
+
+    

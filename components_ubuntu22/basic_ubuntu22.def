@@ -1,0 +1,35 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\e[0;34mubuntu22> \e[0m"
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

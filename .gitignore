@@ -4,3 +4,4 @@ tmp
 *.tar
 .\#*
 .nfs*
+.DS_Store

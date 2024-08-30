@@ -1,0 +1,112 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc_conda /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\e[0;34mafni> \e[0m"
+
+    # CONDA
+    export CONDA_DIR=/opt/conda
+    export PATH=/opt/conda/bin:$PATH
+
+    # AFNI
+    export PATH="/opt/afni:$PATH"
+    export AFNI_PLUGINPATH="/opt/afni"
+    export R_LIBS=/opt/R
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+    # Condaforge 24.3.0
+    export PATH=/opt/conda/bin:$PATH
+    wget https://github.com/conda-forge/miniforge/releases/download/24.3.0-0/Miniforge3-24.3.0-0-Linux-x86_64.sh -P ${tmp}
+    bash ${tmp}/Miniforge3-24.3.0-0-Linux-x86_64.sh -b -p /opt/conda
+    conda update -yq -nbase conda
+    conda config --system --set auto_update_conda false
+    conda config --system --set show_channel_urls true
+    # install; nibabel 3.2 because of ciftify issue
+    conda install -y  --name base \
+            "python" \
+            "nipype" \
+            "notebook" \
+            "jupyterlab" \
+            "numpy<2" \
+            "scipy" \
+            "nibabel=3.2" \
+            "seaborn>=0.9.0" \
+            "nilearn>=0.5.0" \
+            "matplotlib>=2.2.2" \
+            "pandas>=0.23.4" \
+            "flask>=2.1.2" \
+            "flask-cors>=3.0.10"
+    # Conda clean up
+    sync && conda clean --all --yes && sync
+    rm -rf ~/.cache/pip/*
+
+    # AFNI
+    apt-get install software-properties-common -y
+    add-apt-repository universe
+    apt-get install -y \
+        tcsh xfonts-base libssl-dev       \
+        python-is-python3                 \
+        python3-matplotlib python3-numpy  \
+        python3-flask python3-flask-cors  \
+        python3-pil                       \
+        gsl-bin netpbm gnome-tweaks       \
+        libjpeg62 xvfb xterm vim curl     \
+        gedit evince eog                  \
+        libglu1-mesa-dev libglw1-mesa     \
+        libxm4 build-essential            \
+        libcurl4-openssl-dev libxml2-dev  \
+        libgfortran-11-dev libgomp1       \
+        gnome-terminal nautilus           \
+        firefox xfonts-100dpi             \
+        r-base-dev cmake                  \
+        libgdal-dev libopenblas-dev       \
+        libnode-dev libudunits2-dev bc
+
+    # update R
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+    add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/'
+    apt install r-base-dev -y
+    R --version
+
+    # Make a symbolic link for the specific version of GSL included in this version of Ubuntu.
+    ln -s /usr/lib/x86_64-linux-gnu/libgsl.so.27 /usr/lib/x86_64-linux-gnu/libgsl.so.19
+
+    wget https://afni.nimh.nih.gov/pub/dist/bin/misc/@update.afni.binaries -P ${tmp}
+    tcsh ${tmp}/@update.afni.binaries -package linux_ubuntu_16_64 -bindir /opt/afni -do_extras    
+
+    export PATH="/opt/afni:$PATH"
+    export R_LIBS=/opt/R
+    mkdir  $R_LIBS
+    
+    . /opt/conda/etc/profile.d/conda.sh
+    conda deactivate
+    rPkgsInstall -pkgs ALL
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}
