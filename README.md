@@ -38,14 +38,9 @@ Currently `gfae.def` is based on ubuntu 22.04 and contains:
 
 See also todo.md for installation notes and issues.
 
-To consider:
-* ITK-snap 4 (may require newer base system)
-* nighres
-* code editor (e.g. emacs)
-
 
 ## General usage
-Currently the repo is mainly used to assist in developing and building `gfae` containters. It could also be used as described below but this hasn't been tested recenyly.
+Currently the repo is mainly used to assist in developing and building `gfae` containters. It could also be used as described below as a template for repositories for (fMRI analysis) container based development. This hasn't been tested recently.
 
 ### 1. Dowload script
 ```
