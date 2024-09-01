@@ -1,0 +1,64 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]tools> \[\e[0m\]"
+
+    # tools
+    export PATH="/opt/dcm2niix:$PATH"
+    export C3DPATH="/opt/convert3d"
+    export PATH="/opt/convert3d/bin:$PATH"
+
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+    # GNU parallel
+    apt-get install -y -q parallel
+
+    # emacs and vim
+    apt-get install -y -q emacs vim
+
+    # jq
+    curl -fsSL --output /usr/local/bin/jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
+    chmod +x /usr/local/bin/jq
+
+    # dcm2niix
+    mkdir -p /opt/dcm2niix
+    cd /opt/dcm2niix
+    curl -fsSL -o dcm2niix.zip https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20240202/dcm2niix_lnx.zip
+    unzip dcm2niix.zip
+    rm dcm2niix.zip
+    chmod +x dcm2niix
+
+    # convert3d
+    mkdir -p /opt/convert3d
+    curl -fsSL https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
+    | tar -xz -C /opt/convert3d --strip-components 1
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

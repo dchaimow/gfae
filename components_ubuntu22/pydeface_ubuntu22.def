@@ -1,0 +1,98 @@
+        Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc_conda /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]pydeface> \[\e[0m\]"
+
+    # CONDA
+    export CONDA_DIR=/opt/conda
+    export PATH=/opt/conda/bin:$PATH
+
+    # FSL
+    export FSLDIR=/opt/fsl
+    export PATH=$FSLDIR/bin/:$PATH
+    . $FSLDIR/etc/fslconf/fsl.sh
+
+    # TCL/TK (for FSL, reset by Freesurfer)
+    export FSLWISH=/usr/bin/wish
+    export FSLTCLSH=/usr/bin/tclsh
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+    # Condaforge 24.3.0
+    export PATH=/opt/conda/bin:$PATH
+    wget https://github.com/conda-forge/miniforge/releases/download/24.3.0-0/Miniforge3-24.3.0-0-Linux-x86_64.sh -P ${tmp}
+    bash ${tmp}/Miniforge3-24.3.0-0-Linux-x86_64.sh -b -p /opt/conda
+    conda update -yq -nbase conda
+    conda config --system --set auto_update_conda false
+    conda config --system --set show_channel_urls true
+    # install; nibabel 3.2 because of ciftify issue
+    conda install -y  --name base \
+            "python" \
+            "nipype" \
+            "notebook" \
+            "jupyterlab" \
+            "numpy<2" \
+            "scipy" \
+            "nibabel=3.2" \
+            "seaborn>=0.9.0" \
+            "nilearn>=0.5.0" \
+            "matplotlib>=2.2.2" \
+            "pandas>=0.23.4" \
+            "flask>=2.1.2" \
+            "flask-cors>=3.0.10" \
+            "pillow"
+
+    # Conda clean up
+    sync && conda clean --all --yes && sync
+    rm -rf ~/.cache/pip/*
+
+    # FSL
+    apt-get install -y \
+      file            \
+      dc              \
+      mesa-utils      \
+      pulseaudio      \
+      libquadmath0    \
+      libgtk2.0-0     \
+      firefox         \
+      libgomp1 \
+      tcl \
+      tk
+
+    curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
+        python - -d /opt/fsl -V 6.0.7.13 --miniconda /opt/conda --extras_dir /opt/conda/envs
+
+    # pydeface (requires FSL)
+    apt-get install -y \
+        build-essential
+    python -m pip install pydeface
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp} \
+        

@@ -1,43 +1,52 @@
 # Generic fmri analysis environment
-This is a repo template for container based fMRI analysis development. `gfae.def` defines a singularity container including a set of useful fMRI analysis software. `container_resource` contains singularity definition files for individual software packages, meant to assist in adapting `gfae.def` to your own needs.
+This is a repo template for container based fMRI analysis development. `gfae.def` defines a apptainer container including a set of useful fMRI analysis software. `container_resource` contains singularity definition files for individual software packages, meant to assist in adapting `gfae.def` to your own needs. Similarly there are folder groupoing definition files for individual components for a specific gfae version (e.g. base image).
 
-Currently `gfae.def` is based on rocky linux 8 and contains:
+Currently `gfae.def` is based on ubuntu 22.04 and contains:
 * conda via mambaforge, with packages installed in base environment (here only explicitly conda installed packages):
-  * python
-  * nipype
-  * notebook
-  * jupyterlab
-  * numpy (gradunwarp, ciftify, afni)
-  * scipy (gradunwarp, ciftify, afni)
-  * nibabel=3.2 (gradunwarp, ciftify)
-  * seaborn>=0.9.0 (ciftify)
-  * nilearn>=0.5.0 (ciftify)
-  * matplotlib>=2.2.2 (ciftify, afni)
-  * pandas>=0.23.4 (ciftify)
-  * flask>=2.1.2 (afni)
-  * flask-cors>=3.0.10 (afni)
-* FSL 6.0.7.7
-* FreeSurfer 7.4.1 (license.txt required to be present in user home directory)
-* CAT12 and SPM12 together with Matlab 2017b runtime
-* gradunwarp (Human Connectome Project version)
-* ciftify
-* AFNI
-* ANTs
-* ITK-snap 3.8
-* c3d
-* dcm2niix
-* pydeface
-* laynii
-* dchaimow/fmri-analysis
-* firefox
-* parallel
+  * python 3.11.9
+  * nipype 1.8.5
+  * notebook 7.2.2
+  * jupyterlab 4.2.5
+  * numpy 1.26.4 (gradunwarp, ciftify, afni)
+  * scipy 1.14.1 (gradunwarp, ciftify, afni)
+  * nibabel 5.2.1 (gradunwarp, ciftify)
+  * seaborn 0.13.2 (ciftify)
+  * nilearn 0.10.2 (ciftify)
+  * matplotlib 3.9.1 (ciftify, afni)
+  * pandas 2.2.2 (ciftify)
+  * flask 3.0.3 (afni)
+  * flask-cors 5.0.0 (afni)
+* FSL 6.0.7.13
+* FreeSurfer 7.3.2 (license.txt required to be present in user home directory)
+* CAT12.8.2 r2166 and SPM12 r7771 together with Matlab 2017b (v93) runtime
+* gradunwarp 1.2.2 (Human Connectome Project version, latest git commit)
+* ciftify 2.3.3
+* AFNI 24.2.04 (latest)
+* ANTs 2.5.3
+* ITK-snap 4.0.2
+* convert3d 1.0.0
+* dcm2niix v1.0.20240202
+* pydeface 2.0.2
+* laynii 2.7.0
+* firefox 115.13.0esr
+* gnu parallel 20210822
+* emacs 27.1
+* vim 8.2
+* nighres 1.5.1
+* dchaimow/fmri-analysis 6eaf0cd
+
+
+See also todo.md for installation notes and issues.
 
 To consider:
 * ITK-snap 4 (may require newer base system)
 * nighres
 * code editor (e.g. emacs)
 
+
 ## General usage
+Currently the repo is mainly used to assist in developing and building `gfae` containters. It could also be used as described below but this hasn't been tested recenyly.
+
 ### 1. Dowload script
 ```
 wget https://raw.githubusercontent.com/dchaimow/gfae/master/new_repo_from_gfae_template.sh

@@ -5,7 +5,8 @@ From: ubuntu:22.04
     bashrc /opt/etc/bashrc
 %environment
     export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
-    export PS1="\e[0;34mubuntu22> \e[0m"
+    export PS1="\[\e[0;34m\]ubuntu22> \[\e[0m\]"
+
 %post
     chmod 755 /opt/etc/bashrc
 

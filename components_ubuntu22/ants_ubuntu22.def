@@ -5,7 +5,7 @@ From: ubuntu:22.04
     bashrc /opt/etc/bashrc
 %environment
     export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
-    export PS1="\e[0;34ants> \e[0m"
+    export PS1="\[\e[0;34m\]ants> \[\e[0m\]"
 
     # ANTS
     export PATH=/opt/ants/bin:$PATH
@@ -34,16 +34,9 @@ From: ubuntu:22.04
             locales-all  
     
     # ANTs
-    apt-get install -y build-essential cmake 
-
-    git clone https://github.com/ANTsX/ANTs.git ${tmp}/ANTs
-    mkdir -p ${tmp}/build 
-    cd ${tmp}/build
-    cmake -DCMAKE_INSTALL_PREFIX=/opt/ants \
-        ../ANTs 2>&1 | tee cmake.log
-    make -j 4 2>&1 | tee build.log
-    cd ANTS-build
-    make install 2>&1 | tee install.log
+    wget https://github.com/ANTsX/ANTs/releases/download/v2.5.3/ants-2.5.3-ubuntu-22.04-X64-gcc.zip -P ${tmp}
+    unzip -q ${tmp}/ants-2.5.3-ubuntu-22.04-X64-gcc.zip -d /opt/
+    mv /opt/ants-2.5.3 /opt/ants
 
     # Clean up
     rm -rf /var/lib/apt/lists/*

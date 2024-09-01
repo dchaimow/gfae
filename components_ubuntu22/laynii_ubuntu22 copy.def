@@ -3,12 +3,14 @@ From: ubuntu:22.04
 
 %files
     bashrc /opt/etc/bashrc
-    
 %environment
     export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
-    export PS1="\[\e[0;34m\]wb> \[\e[0m\]"
+    export PS1="\[\e[0;34m\]laynii> \[\e[0m\]"
 
-%post
+    # LAYNII
+    export PATH=/opt/laynii:$PATH
+
+%post -c /bin/bash
     chmod 755 /opt/etc/bashrc
 
     tmp=$(mktemp -d)
@@ -32,13 +34,16 @@ From: ubuntu:22.04
             locales \
             locales-all
 
-    # Connectome Workbench
+    # LAYNII 
     apt-get install -y \
-            gnupg2
-    wget -O- http://neuro.debian.net/lists/jammy.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
-    apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9
-    apt-get update
-    apt-get install connectome-workbench -y
+        build-essential \
+        zlib1g-dev
+        
+    git clone --depth 1 https://github.com/layerfMRI/laynii ${tmp}/laynii
+    pushd ${tmp}/laynii
+    make all
+    popd
+    mv ${tmp}/laynii /opt/
 
     # Clean up
     rm -rf /var/lib/apt/lists/*

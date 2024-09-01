@@ -5,11 +5,14 @@ From: ubuntu:22.04
     bashrc_conda /opt/etc/bashrc
 %environment
     export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
-    export PS1="\[\e[0;34m\]gradunwarp> \[\e[0m\]"
+    export PS1="\[\e[0;34m\]nighres> \[\e[0m\]"
 
     # CONDA
     export CONDA_DIR=/opt/conda
     export PATH=/opt/conda/bin:$PATH
+
+    # Nighres
+    export JCC_JDK=/usr/lib/jvm/java-1.11.0-openjdk-amd64
 %post
     chmod 755 /opt/etc/bashrc
 
@@ -33,6 +36,44 @@ From: ubuntu:22.04
             bash-completion \
             locales \
             locales-all
+
+    # # Condaforge 24.3.0
+    # export PATH=/opt/conda/bin:$PATH
+    # wget https://github.com/conda-forge/miniforge/releases/download/24.3.0-0/Miniforge3-24.3.0-0-Linux-x86_64.sh -P ${tmp}
+    # bash ${tmp}/Miniforge3-24.3.0-0-Linux-x86_64.sh -b -p /opt/conda
+    # conda update -yq -nbase conda
+    # conda config --system --set auto_update_conda false
+    # conda config --system --set show_channel_urls true
+    # # install; nibabel 3.2 because of ciftify issue
+    # conda install -y  --name base \
+    #         "python" \
+    #         "nipype" \
+    #         "notebook" \
+    #         "jupyterlab" \
+    #         "numpy<2" \
+    #         "scipy" \
+    #         "nibabel=3.2" \
+    #         "seaborn>=0.9.0" \
+    #         "nilearn>=0.5.0" \
+    #         "matplotlib>=2.2.2" \
+    #         "pandas>=0.23.4" \
+    #         "flask>=2.1.2" \
+    #         "flask-cors>=3.0.10" \
+    #         "pillow"
+
+    # # Conda clean up
+    # sync && conda clean --all --yes && sync
+    # rm -rf ~/.cache/pip/*
+
+    # Build Nighres (before conda)
+    apt install -y default-jdk build-essential python3-dev python3-pip python3-jcc
+    export JCC_JDK=/usr/lib/jvm/java-1.11.0-openjdk-amd64
+
+    cur_dir=$(pwd)
+    git clone --depth 1 https://github.com/nighres/nighres /opt/nighres_build
+    cd /opt/nighres_build
+    ./build.sh
+    cd ${cur_dir}
 
     # Condaforge 24.3.0
     export PATH=/opt/conda/bin:$PATH
@@ -58,15 +99,14 @@ From: ubuntu:22.04
             "flask-cors>=3.0.10" \
             "pillow"
 
-    # gradunwarp   
-    git clone https://github.com/Washington-University/gradunwarp.git ${tmp}/gradunwarp
-    python -m pip install --no-cache-dir -r ${tmp}/gradunwarp/requirements.txt &&
-    python -m pip install --no-cache-dir ${tmp}/gradunwarp
+    cd /opt/nighres_build
+    pip install .
+    cd ${cur_dir}
 
     # Conda clean up
     sync && conda clean --all --yes && sync
     rm -rf ~/.cache/pip/*
-
+    
     # Clean up
     rm -rf /var/lib/apt/lists/*
     rm -rf ${tmp}

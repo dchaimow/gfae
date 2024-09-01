@@ -1,0 +1,43 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]laynii> \[\e[0m\]"
+
+    # LAYNII
+    export PATH=/opt/laynii:$PATH
+
+%post -c /bin/bash
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+    # LAYNII
+    wget https://github.com/layerfMRI/LAYNII/releases/download/v2.7.0/LayNii_v2.7.0_Linux64.zip -P ${tmp}
+    unzip -q ${tmp}/LayNii_v2.7.0_Linux64.zip -d /opt/laynii
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

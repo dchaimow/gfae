@@ -5,7 +5,7 @@ From: ubuntu:22.04
     bashrc_conda /opt/etc/bashrc
 %environment
     export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
-    export PS1="\e[0;34mafni> \e[0m"
+    export PS1="\[\e[0;34m\]afni> \[\e[0m\]"
 
     # CONDA
     export CONDA_DIR=/opt/conda
@@ -65,7 +65,7 @@ From: ubuntu:22.04
     sync && conda clean --all --yes && sync
     rm -rf ~/.cache/pip/*
 
-    # AFNI
+    # AFNI latest version 
     apt-get install software-properties-common -y
     add-apt-repository universe
     apt-get install -y \

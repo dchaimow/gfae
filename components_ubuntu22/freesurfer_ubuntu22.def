@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]freesurfer> \[\e[0m\]"
+
+    # Freesurfer
+    export FREESURFER_HOME=/opt/freesurfer
+    export FS_LICENSE=~/license.txt
+    export SUBJECTS_DIR=$FREESURFER_HOME/subjects
+    . $FREESURFER_HOME/SetUpFreeSurfer.sh
+
+    # TCL/TK (for FSL, reset by Freesurfer)
+    export FSLWISH=/usr/bin/wish
+    export FSLTCLSH=/usr/bin/tclsh
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+    
+    # Freesurfer
+    wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.2/freesurfer_ubuntu22-7.3.2_amd64.deb -P ${tmp} \
+        --no-check-certificate
+    apt install ${tmp}/freesurfer_ubuntu22-7.3.2_amd64.deb -y
+    ln -s /usr/local/freesurfer/7.3.2 /opt/freesurfer 
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

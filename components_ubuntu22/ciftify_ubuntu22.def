@@ -1,0 +1,130 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc_conda /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]ciftify> \[\e[0m\]"
+
+    # CONDA
+    export CONDA_DIR=/opt/conda
+    export PATH=/opt/conda/bin:$PATH
+
+    # FSL
+    export FSLDIR=/opt/fsl
+    export PATH=$FSLDIR/bin/:$PATH
+    . $FSLDIR/etc/fslconf/fsl.sh
+
+    # Freesurfer
+    export FREESURFER_HOME=/opt/freesurfer
+    export FS_LICENSE=~/license.txt
+    export SUBJECTS_DIR=$FREESURFER_HOME/subjects
+    . $FREESURFER_HOME/SetUpFreeSurfer.sh
+    
+    # Ciftify
+    export PATH=$PATH:/opt/msm
+    
+    # TCL/TK (for FSL, reset by Freesurfer)
+    export FSLWISH=/usr/bin/wish
+    export FSLTCLSH=/usr/bin/tclsh
+
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+    # Condaforge 24.3.0
+    export PATH=/opt/conda/bin:$PATH
+    wget https://github.com/conda-forge/miniforge/releases/download/24.3.0-0/Miniforge3-24.3.0-0-Linux-x86_64.sh -P ${tmp}
+    bash ${tmp}/Miniforge3-24.3.0-0-Linux-x86_64.sh -b -p /opt/conda
+    conda update -yq -nbase conda
+    conda config --system --set auto_update_conda false
+    conda config --system --set show_channel_urls true
+    # install; nibabel 3.2 because of ciftify issue
+    conda install -y  --name base \
+            "python" \
+            "nipype" \
+            "notebook" \
+            "jupyterlab" \
+            "numpy<2" \
+            "scipy" \
+            "nibabel=3.2" \
+            "seaborn>=0.9.0" \
+            "nilearn>=0.5.0" \
+            "matplotlib>=2.2.2" \
+            "pandas>=0.23.4" \
+            "flask>=2.1.2" \
+            "flask-cors>=3.0.10" \
+            "pillow"
+
+    # Conda clean up
+    sync && conda clean --all --yes && sync
+    rm -rf ~/.cache/pip/*
+
+    # FSL
+    apt-get install -y \
+      file            \
+      dc              \
+      mesa-utils      \
+      pulseaudio      \
+      libquadmath0    \
+      libgtk2.0-0     \
+      firefox         \
+      libgomp1 \
+      tcl \
+      tk
+
+    curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
+        python - -d /opt/fsl -V 6.0.7.13 --miniconda /opt/conda --extras_dir /opt/conda/envs
+    
+    # Freesurfer
+    wget https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.2/freesurfer_ubuntu22-7.3.2_amd64.deb -P ${tmp} \
+        --no-check-certificate
+    apt install ${tmp}/freesurfer_ubuntu22-7.3.2_amd64.deb -y
+    ln -s /usr/local/freesurfer/7.3.2 /opt/freesurfer 
+
+    # Connectome Workbench
+    apt-get install -y \
+            gnupg2
+    wget -O- http://neuro.debian.net/lists/jammy.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+    apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9
+    apt-get update
+    apt-get install connectome-workbench -y
+    
+    # Ciftify (requires workbench, fsl, freesurfer, conda)
+    # msm
+    apt-get install -y \
+        libopenblas-dev
+        
+    mkdir -p /opt/msm
+    wget https://github.com/ecr05/MSM_HOCR/releases/download/v3.0FSL/msm_ubuntu_v3 -P /opt/fsl/bin
+    # replace fsl msm
+    mv /opt/fsl/bin/msm /opt/fsl/bin/msm_fsl
+    mv /opt/fsl/bin/msm_ubuntu_v3 /opt/fsl/bin/msm
+    chmod +x /opt/fsl/bin/msm
+
+    pip install ciftify
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

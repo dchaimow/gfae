@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]itk-snap> \[\e[0m\]"
+
+    # ITK-SNAP
+    export PATH=/opt/itk-snap/bin:$PATH
+
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+   
+    # Install ITK-SNAP
+    apt-get install -y -q \
+        libqt5gui5 \
+        libopengl0 
+            
+    mkdir -p /opt/itk-snap
+    curl -fsSL --retry 5 \
+        https://deac-ams.dl.sourceforge.net/project/itk-snap/itk-snap/4.0.2/itksnap-4.0.2-Linux-gcc64.tar.gz \
+        | tar -xz --strip-components=1 -C /opt/itk-snap
+    find /opt/itk-snap/ -name '*.so.*' | xargs strip --remove-section=.note.ABI-tag
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

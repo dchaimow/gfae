@@ -3,11 +3,12 @@ From: ubuntu:22.04
 
 %files
     bashrc /opt/etc/bashrc
-    
 %environment
     export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
-    export PS1="\[\e[0;34m\]wb> \[\e[0m\]"
+    export PS1="\[\e[0;34m\]ants> \[\e[0m\]"
 
+    # ANTS
+    export PATH=/opt/ants/bin:$PATH
 %post
     chmod 755 /opt/etc/bashrc
 
@@ -30,15 +31,21 @@ From: ubuntu:22.04
             bc \
             bash-completion \
             locales \
-            locales-all
+            locales-all  
+    
+    # ANTs
+    apt-get install -y build-essential cmake 
 
-    # Connectome Workbench
-    apt-get install -y \
-            gnupg2
-    wget -O- http://neuro.debian.net/lists/jammy.de-fzj.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
-    apt-key adv --recv-keys --keyserver hkps://keyserver.ubuntu.com 0xA5D32F012649A5A9
-    apt-get update
-    apt-get install connectome-workbench -y
+    
+
+    git clone https://github.com/ANTsX/ANTs.git ${tmp}/ANTs
+    mkdir -p ${tmp}/build 
+    cd ${tmp}/build
+    cmake -DCMAKE_INSTALL_PREFIX=/opt/ants \
+        ../ANTs 2>&1 | tee cmake.log
+    make -j 4 2>&1 | tee build.log
+    cd ANTS-build
+    make install 2>&1 | tee install.log
 
     # Clean up
     rm -rf /var/lib/apt/lists/*

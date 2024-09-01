@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]firefox> \[\e[0m\]"
+
+     # Firefox ESR
+    export BROWSER=/usr/bin/firefox-esr
+%post
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            locales \
+            locales-all
+
+    # firefox ESR
+    apt-get install -y \
+        software-properties-common \
+        libpci-dev \
+        libegl-mesa0 \
+        libgl1-mesa-dev
+
+    apt remove firefox -y
+    add-apt-repository ppa:mozillateam/ppa
+    apt-get update -y
+    apt-get install firefox-esr -y
+
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}
