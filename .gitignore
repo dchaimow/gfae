@@ -5,3 +5,5 @@ tmp
 .\#*
 .nfs*
 .DS_Store
+build-temp-*/
+*_sandbox/
