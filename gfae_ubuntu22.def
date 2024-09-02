@@ -124,6 +124,8 @@ From: ubuntu:22.04
 
     # install built nighres (after conda)
     cd /opt/nighres_build
+    # force nibabel 3.2.2 for ciftify
+    sed -i 's/nibabel>=3.2.2/nibabel==3.2.2/g' setup.cfg 
     pip install .
     cd ${cur_dir}
 

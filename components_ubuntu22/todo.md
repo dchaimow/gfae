@@ -33,8 +33,11 @@
 * cat12: cat12 server disappeared, have to try later again [used local copy of software for now]
 * workbench: it was easiest to use neurodebian which had a working package for the newest version, otherwise it was very difficult to figure out all requirements -> workbench binarier are directly in /usr/bin not under /opt!
 * ciftify: ciftify wants the msm version from github.com/ecr05/MSM_HOCR, not the one already installed in fsl (not sure whether thats still important with new fsl versions?), in order for ciftify to use the right version (because fsl msm is in the path) we copy the fsl msm to msm_fsl and replace it with the msm binary from github.com/ecr05/MSM_HOCR (given all this I am acqtually not sure which msm our older ciftify installation or the one in Leipzig used)
+* ciftify: requires nibabel < 4, because of deprecated module 'nibabel.gifti.giftiio', nighres installation seems to replace nibabel 3.2.2 with 5.2 (see edit of setup.cfg below for fix)
+* ciftify: generally ciftify does not seem to be maintaned since several years 
 * firefox: installed firefox-esr from alternative repository (ubuntu provides snap which doesnt work inside apptainer)
 * nighres: needs to be compiled (only got it working before conda install using ubuntu python, java, etc.) and then pip installed from the build directory (e.g. after setting up conda and conda environment), build directory is left in /opt/nighres_build so that it can be easily installed into new conda environments (cd /opt/nighres_build; pip install .)
+* nighres: edit setup.cfg to force nibabel ==3.2.2 instead of >= 3.2.2 (for ciftify)
 
 when creating full container on login node (from ptmp but using normal tmp):
 INFO:    Creating SIF file...

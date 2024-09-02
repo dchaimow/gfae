@@ -9,7 +9,7 @@ Currently `gfae.def` is based on ubuntu 22.04 and contains:
   * jupyterlab 4.2.5
   * numpy 1.26.4 (gradunwarp, ciftify, afni)
   * scipy 1.14.1 (gradunwarp, ciftify, afni)
-  * nibabel 5.2.1 (gradunwarp, ciftify)
+  * nibabel 3.2.2 (gradunwarp, ciftify)
   * seaborn 0.13.2 (ciftify)
   * nilearn 0.10.2 (ciftify)
   * matplotlib 3.9.1 (ciftify, afni)
@@ -20,6 +20,7 @@ Currently `gfae.def` is based on ubuntu 22.04 and contains:
 * FreeSurfer 7.3.2 (license.txt required to be present in user home directory)
 * CAT12.8.2 r2166 and SPM12 r7771 together with Matlab 2017b (v93) runtime
 * gradunwarp 1.2.2 (Human Connectome Project version, latest git commit)
+* Connectome workbench: 2.0.0
 * ciftify 2.3.3
 * AFNI 24.2.04 (latest)
 * ANTs 2.5.3
@@ -36,7 +37,7 @@ Currently `gfae.def` is based on ubuntu 22.04 and contains:
 * dchaimow/fmri-analysis 6eaf0cd
 
 
-See also todo.md for installation notes and issues.
+See also components_ubuntu22/todo.md for installation notes and issues.
 
 
 ## General usage
