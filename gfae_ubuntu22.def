@@ -3,7 +3,6 @@ From: ubuntu:22.04
 
 %files
     bashrc_conda /opt/etc/bashrc
-    /ptmp/dchaimow/CAT12.8.2_r2166_R2017b_MCR_Linux.zip /opt/CAT12.8.2_r2166_R2017b_MCR_Linux.zip
 %environment
     export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
     export PS1="\[\e[0;34m\]gfae> \[\e[0m\]"
