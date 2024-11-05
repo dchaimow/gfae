@@ -57,9 +57,6 @@ From: ubuntu:22.04
     # Nighres
     export JCC_JDK=/usr/lib/jvm/java-1.11.0-openjdk-amd64
 
-     # FMRI-ANALYSIS
-    export PATH=/opt/fmri-analysis/library:$PATH
-
     # TCL/TK (for FSL, reset by Freesurfer)
     export FSLWISH=/usr/bin/wish
     export FSLTCLSH=/usr/bin/tclsh
@@ -292,12 +289,9 @@ From: ubuntu:22.04
     mv /opt/mcr/v93/bin/glnxa64/libfreetype.so.6.11.1 /opt/mcr/v93/bin/glnxa64/libfreetype.so.6.11.1.bak
 
     # SPM12 with CAT12
-    #wget https://www.neuro.uni-jena.de/cat12/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -P ${tmp}
-    #unzip -q ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -d ${tmp}
-    #mv ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux /opt/spm12
-    unzip -q /opt/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -d /opt
-    mv /opt/CAT12.8.2_r2166_R2017b_MCR_Linux /opt/spm12
-    rm -f /opt/CAT12.8.2_r2166_R2017b_MCR_Linux.zip
+    wget https://www.neuro.uni-jena.de/cat12/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -P ${tmp}
+    unzip -q ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux.zip -d ${tmp}
+    mv ${tmp}/CAT12.8.2_r2166_R2017b_MCR_Linux /opt/spm12
     chmod +x /opt/spm12/run_spm12.sh /opt/spm12/spm12 
     # single call (to build spm12.ctf while we have write permissions)
     /opt/spm12/run_spm12.sh /opt/mcr/v93 function exit
@@ -306,11 +300,6 @@ From: ubuntu:22.04
             /opt/spm12/spm12_mcr/bin/spm12
     chmod +x /opt/spm12/spm12_mcr/bin/spm12
     ln -s /opt/spm12/spm12_mcr/bin/spm12 /usr/local/bin/spm12
-
-    # fmri analysis
-    git clone https://github.com/dchaimow/fmri-analysis /opt/fmri-analysis
-    chmod -R +x /opt/fmri-analysis
-
 
     # Conda clean up
     sync && conda clean --all --yes && sync

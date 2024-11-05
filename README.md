@@ -34,8 +34,6 @@ Currently `gfae.def` is based on ubuntu 22.04 and contains:
 * emacs 27.1
 * vim 8.2
 * nighres 1.5.1
-* dchaimow/fmri-analysis 6eaf0cd
-
 
 See also components_ubuntu22/todo.md for installation notes and issues.
 
