@@ -81,7 +81,8 @@ From: ubuntu:22.04
             tree \
             bc \
             bash-completion \
-            locales \
+            octave \
+	    locales \
             locales-all
 
     # Build Nighres (before conda)
