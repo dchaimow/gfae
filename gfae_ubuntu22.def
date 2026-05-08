@@ -153,7 +153,7 @@ From: ubuntu:22.04
       tk
 
     curl -fsSL https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.py | \
-        python - -d /opt/fsl -V 6.0.7.13 --miniconda /opt/conda --extras_dir /opt/conda/envs
+        python - -d /opt/fsl -V 6.0.7.13 --miniconda /opt/conda --conda --extras_dir /opt/conda/envs
     
     # pydeface (requires FSL)
     apt-get install -y \
