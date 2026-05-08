@@ -35,6 +35,7 @@ Currently `gfae.def` is based on ubuntu 22.04 and contains:
 * vim 8.2
 * nighres 1.5.1
 * GNU octave 6.4.0
+* PALM alpha 119
 
 See also components_ubuntu22/todo.md for installation notes and issues.
 
