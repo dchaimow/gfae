@@ -41,10 +41,9 @@ See also components_ubuntu22/todo.md for installation notes and issues.
 
 ## MATLAB variant
 
-Theres is also a variant that includes MATLAB R2024b (installed via mpm) and SPM 25.01.02 for MATLAB (in addition to the standalone SPM12): `gfae_matlab_spm.def`. This is based on `gfae.def` and includes the same software as described above in addition to the matlab and spm versions mentioned.
+Theres is also a variant that includes MATLAB R2024b (installed via mpm) and SPM 25.01.02 for MATLAB (in addition to the standalone SPM12): `gfae_matlab_spm.def`. This is based on `gfae.def` and includes the same software as described above in addition to the matlab and spm versions mentioned. Note: for MATLAB to run, the path to a valid license file or the address of a license server must be provided via environment variables (e.g. `MLM_LICENSE_FILE`) when starting the container. It is possible to set `APPTAINERENV_MLM_LICENSE_FILE` outside the container to have it available inside the container as `MLM_LICENSE_FILE`.
 
-
-## General usage
+## General usage as a template for container based development
 Currently the repo is mainly used to assist in developing and building `gfae` containters. It could also be used as described below as a template for repositories for (fMRI analysis) container based development. This hasn't been tested recently.
 
 ### 1. Dowload script
