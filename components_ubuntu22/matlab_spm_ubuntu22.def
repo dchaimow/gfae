@@ -1,0 +1,140 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]gfae> \[\e[0m\]"
+
+    # MATLAB R2024b (installed via mpm)
+    export MATLAB_HOME=/opt/MATLAB/R2024b
+    export PATH=$MATLAB_HOME/bin:$PATH
+    export MATLABPATH=/opt/spm:$MATLABPATH
+
+%post -c /bin/bash
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            octave \
+	        locales \
+            locales-all
+
+    
+    # MATLAB R2024b via mpm (MathWorks Package Manager)
+    # No license required at build time; license checked at runtime via MLM_LICENSE_FILE
+    apt-get install -y \
+        ca-certificates \
+        libasound2 \
+        libatomic1 \
+        libc6 \
+        libcairo-gobject2 \
+        libcairo2 \
+        libcap2 \
+        libcrypt1 \
+        libcups2 \
+        libdrm2 \
+        libfontconfig1 \
+        libfribidi0 \
+        libgbm1 \
+        libgdk-pixbuf-2.0-0 \
+        libgl1 \
+        libglib2.0-0 \
+        libgstreamer-plugins-base1.0-0 \
+        libgstreamer1.0-0 \
+        libgtk-3-0 \
+        libice6 \
+        libltdl7 \
+        libmd0 \
+        libnettle8 \
+        libnspr4 \
+        libnss3 \
+        libpam0g \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libpangoft2-1.0-0 \
+        libpixman-1-0 \
+        libsndfile1 \
+        libtirpc3 \
+        libudev1 \
+        libuuid1 \
+        libwayland-client0 \
+        libxcomposite1 \
+        libxcursor1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxfont2 \
+        libxft2 \
+        libxinerama1 \
+        libxrandr2 \
+        libxt6 \
+        libxtst6 \
+        libxxf86vm1 \
+        locales \
+        locales-all \
+        make \
+        net-tools \
+        procps \
+        sudo \
+        unzip \
+        wget \
+        zlib1g
+
+    wget -q https://www.mathworks.com/mpm/glnxa64/mpm -O ${tmp}/mpm
+    chmod +x ${tmp}/mpm
+    ${tmp}/mpm install \
+        --release=R2024b \
+        --destination=/opt/MATLAB/R2024b \
+        --products \
+            MATLAB \
+            Bioinformatics_Toolbox \
+            Curve_Fitting_Toolbox \
+            Deep_Learning_Toolbox \
+            Financial_Toolbox \
+            Global_Optimization_Toolbox \
+            Image_Processing_Toolbox \
+            MATLAB_Compiler \
+            Mapping_Toolbox \
+            Instrument_Control_Toolbox \
+            Medical_Imaging_Toolbox \
+            Optimization_Toolbox \
+            Parallel_Computing_Toolbox \
+            Reinforcement_Learning_Toolbox \
+            Robotics_System_Toolbox \
+            Signal_Processing_Toolbox \
+            Statistics_and_Machine_Learning_Toolbox \
+            Symbolic_Math_Toolbox \
+            Wavelet_Toolbox 
+    rm -f ${tmp}/mpm
+    
+    # note: before starting MATLAB, set environment variable MLM_LICENSE_FILE
+    # e.g. for license server at kyb: MLM_LICENSE_FILE=27000@kyb-lic-matlab.mpi.localnet
+    # it can also be automatically set outside the container as APPTAINERENV_MLM_LICENSE_FILE
+
+    mkdir /usr/local/MATLAB
+    ln -s /opt/MATLAB/R2024b /usr/local/MATLAB/R2024b
+
+    # SPM 25.01.02
+    wget https://github.com/spm/spm/releases/download/25.01.02/spm_25.01.02.zip -O ${tmp}/spm_25.01.02.zip
+    unzip -q ${tmp}/spm_25.01.02.zip -d /opt
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

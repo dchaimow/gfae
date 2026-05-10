@@ -39,6 +39,10 @@ Currently `gfae.def` is based on ubuntu 22.04 and contains:
 
 See also components_ubuntu22/todo.md for installation notes and issues.
 
+## MATLAB variant
+
+Theres is also a variant that includes MATLAB R2024b (installed via mpm) and SPM 25.01.02 for MATLAB (in addition to the standalone SPM12): `gfae_matlab_spm.def`. This is based on `gfae.def` and includes the same software as described above in addition to the matlab and spm versions mentioned.
+
 
 ## General usage
 Currently the repo is mainly used to assist in developing and building `gfae` containters. It could also be used as described below as a template for repositories for (fMRI analysis) container based development. This hasn't been tested recently.
