@@ -1,0 +1,48 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%files
+    bashrc_conda /opt/etc/bashrc
+%environment
+    export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+    export PS1="\[\e[0;34m\]gfae> \[\e[0m\]"
+
+    # PALM
+    export PATH="/opt/palm:$PATH"
+
+%post -c /bin/bash
+    chmod 755 /opt/etc/bashrc
+
+    tmp=$(mktemp -d)
+    
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends \
+            sudo \
+            wget \
+            curl \
+            ca-certificates \
+            unzip \
+            bzip2 \
+            git \
+            nano \
+            binutils \
+            mlocate \
+            tree \
+            bc \
+            bash-completion \
+            octave \
+	        locales \
+            locales-all
+
+    # PALM
+    apt install -y build-essential liboctave-dev
+    mkdir -p /opt/palm
+    curl -fsSL --retry 5 https://s3-us-west-2.amazonaws.com/andersonwinkler/palm/palm-alpha119.tar.gz \
+        | tar -xz --strip-components=1 -C /opt/palm
+    cd /opt/palm/fileio/@gifti/private/
+    octave --eval 'system("make PLATFORM=octave");'
+
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
+    rm -rf ${tmp}

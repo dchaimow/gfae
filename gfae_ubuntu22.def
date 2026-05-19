@@ -89,9 +89,12 @@ From: ubuntu:22.04
             locales-all
 
     # PALM
+    apt install -y build-essential liboctave-dev
     mkdir -p /opt/palm
     curl -fsSL --retry 5 https://s3-us-west-2.amazonaws.com/andersonwinkler/palm/palm-alpha119.tar.gz \
         | tar -xz --strip-components=1 -C /opt/palm
+    cd /opt/palm/fileio/@gifti/private/
+    octave --eval 'system("make PLATFORM=octave");'
 
     # Build Nighres (before conda)
     apt install -y default-jdk build-essential python3-dev python3-pip python3-jcc
