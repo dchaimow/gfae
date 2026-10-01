@@ -194,7 +194,8 @@ From: ubuntu@sha256:962f6cadeae0ea6284001009daa4cc9a8c37e75d1f5191cf0eb83fe565b6
         -DPython_EXECUTABLE=/usr/bin/python3 \
         -DFETCHCONTENT_SOURCE_DIR_NIFTI_CLIB=${tmp}/nifti_clib \
         -DFETCHCONTENT_SOURCE_DIR_GIFTI_CLIB=${tmp}/gifti_clib
-    ninja -C ${tmp}/afni_build install
+    # 32 parallel jobs (the build runs on a shared login node, as it needs internet access)
+    ninja -C ${tmp}/afni_build -j 32 install
     unset CC CXX
     # the install does not set the executable bit of the python scripts
     chmod a+x /opt/afni/bin/*.py
