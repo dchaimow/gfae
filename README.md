@@ -60,7 +60,7 @@ Known issues of earlier images (unpinned recipe): `gfae_20260509T025235Z` has ni
 
 ## Building
 
-`./build.sh gfae_ubuntu22.def gfae` (or `./build.sh gfae_matlab_ubuntu22.def gfae_matlab`) builds the image with `--fakeroot` and names it `<name>_<build time>_md5<checksum>_git<commit>.sif`. A build takes several hours (AFNI is compiled; use a node with many cores, in tmux or as a job). The `%test` section checks the versions of the main software and that the programs of all packages are available. Building with `--notest` and then running `apptainer test <image>.sif` keeps the image if a test fails.
+`./build.sh gfae_ubuntu22.def gfae` (or `./build.sh gfae_matlab_ubuntu22.def gfae_matlab`) builds the image with `--fakeroot` and names it `<name>_<build time>_md5<checksum>_git<commit>.sif`. A build takes several hours (AFNI is compiled; use a node with many cores, in tmux or as a job). The `%test` section checks the versions of the main software and that the programs of all packages are available. `build.sh` builds with `--notest` and then runs `apptainer test` on the named image, so the image is kept if a test fails (the script then reports `TESTS FAILED`).
 
 ## General usage as a template for container based development
 Currently the repo is mainly used to assist in developing and building `gfae` containters. It could also be used as described below as a template for repositories for (fMRI analysis) container based development. This hasn't been tested recently.
