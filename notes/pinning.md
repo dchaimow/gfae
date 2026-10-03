@@ -87,6 +87,9 @@ Images in `/home/rglz/containers/` (history in `gfae_log.md` there).
 | Removing AFNI's `-dev` build packages also removes packages that depend on them (e.g. `libgl1-mesa-dev`) | gfae keeps the build packages |
 | `rPkgsInstall` does not fail when a package fails to install | `%test` loads all AFNI R packages |
 | `%test` prints `/root/matlab/startup.m … Read-only file system` | harmless noise from FreeSurfer's environment setup |
+| apt: `libjpeg62-dev` (AFNI) conflicts with `libjpeg-turbo8-dev` (required via `libhdf5-dev` by `libgdal-dev` and `liboctave-dev`) | `libjpeg-dev`: AFNI's `find_package(JPEG 62)` also accepts libjpeg-turbo 8 |
+| apt: `pkg-config` conflicts with `pkgconf`, which other packages pull in | request `pkgconf` (it provides `pkg-config`) |
+| /ptmp file locking failed (`Remote I/O error`), apt could not lock its lists | was a problem of the file system, fixed by the admins (October 2026) |
 | The CAT12 zip contains two folders (`CAT12.8.2_R2017b_MCR_Linux`, `CAT12.8.2_r2166_R2017b_MCR_Linux`) | the recipe uses the `r2166` one |
 
 ## Build workflow
@@ -94,6 +97,11 @@ Images in `/home/rglz/containers/` (history in `gfae_log.md` there).
 - Apptainer has no layer cache: every build reruns all of `%post` (several hours, AFNI is compiled). The cache
   only holds the base image.
 - Build with `--notest`, then run `apptainer test image.sif`: a failing test then doesn't discard the image.
+- Test single stages before a full build, in a sandbox of the base image (minutes instead of hours):
+  `apptainer build --fakeroot --sandbox sb docker://ubuntu@sha256:…`, then
+  `apptainer exec --fakeroot --writable sb bash script.sh`. E.g. set up the apt sources as in `%post` and run
+  `apt-get install -s <all packages>` to check that the package set resolves (`-s` only simulates), or run the
+  Miniforge/conda/pip part to check the pins.
 - Build on a node with many cores, in tmux or as a job (an interactive build dies when its ssh session closes).
 - Set `APPTAINER_TMPDIR`/`APPTAINER_CACHEDIR` to a file system with enough space (`build.sh` uses `~/ptmp/tmp`).
 - Keep built images archived; a deleted image means a full rebuild.
