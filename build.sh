@@ -16,10 +16,19 @@ else
   git_sha=UNAVAILABLE
 fi
 
-# Build the container
-apptainer build --fakeroot $container_fname $deffile
+# Build the container (without running %test, so that the image is kept if a test fails)
+apptainer build --fakeroot --notest $container_fname $deffile || exit 1
 
 # Name the container with the git sha and build date
 md5=$(md5sum $container_fname | cut -d' ' -f1)
 build_date=$(date -u +"%Y%m%dT%H%M%SZ")
-mv ${container_fname} ${container_fname%.sif}_${build_date}_md5${md5}_git${git_sha}.sif
+final_fname=${container_fname%.sif}_${build_date}_md5${md5}_git${git_sha}.sif
+mv ${container_fname} ${final_fname}
+
+# Run the %test section of the definition file
+if apptainer test ${final_fname}; then
+  echo "tests passed: ${final_fname}"
+else
+  echo "TESTS FAILED: ${final_fname}"
+  exit 1
+fi
