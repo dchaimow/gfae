@@ -205,9 +205,12 @@ From: ubuntu@sha256:962f6cadeae0ea6284001009daa4cc9a8c37e75d1f5191cf0eb83fe565b6
     tar -xzf ${tmp}/afni_atlases.tgz --strip-components=1 -C /opt/afni/bin
 
     # AFNI R packages, from the CRAN snapshot of the date of the apt snapshot
+    # (rPkgsInstall calls other AFNI scripts, which must be on the PATH; it does not fail if packages are not
+    # installed, therefore they are loaded afterwards)
     export R_LIBS=/opt/R
     mkdir -p ${R_LIBS}
-    /opt/afni/bin/rPkgsInstall -pkgs ALL -site https://packagemanager.posit.co/cran/__linux__/jammy/2026-05-09
+    PATH=/opt/afni/bin:$PATH rPkgsInstall -pkgs ALL -site https://packagemanager.posit.co/cran/__linux__/jammy/2026-05-09
+    Rscript -e 'for (p in c("afex", "phia", "snow", "nlme", "lme4", "lmerTest", "gamm4", "data.table", "paran", "psych", "brms", "corrplot", "metafor")) library(p, character.only = TRUE)'
 
     # PALM alpha119, with the gifti mex files compiled for octave
     mkdir -p /opt/palm
