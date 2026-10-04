@@ -222,6 +222,8 @@ From: ubuntu@sha256:962f6cadeae0ea6284001009daa4cc9a8c37e75d1f5191cf0eb83fe565b6
     # installed, therefore they are loaded afterwards)
     export R_LIBS=/opt/R
     mkdir -p ${R_LIBS}
+    # AFNI's R programs look for R_io.so on the PATH, the CMake build installs it as lib/librio.so
+    ln -s ../lib/librio.so /opt/afni/bin/R_io.so
     PATH=/opt/afni/bin:$PATH rPkgsInstall -pkgs ALL -site https://packagemanager.posit.co/cran/__linux__/jammy/2026-05-09
     Rscript -e 'for (p in c("afex", "phia", "snow", "nlme", "lme4", "lmerTest", "gamm4", "data.table", "paran", "psych", "brms", "corrplot", "metafor")) library(p, character.only = TRUE)'
 
@@ -444,6 +446,8 @@ assert nipype.__version__ == '1.8.5', nipype.__version__
     # AFNI R packages
     Rscript -e 'for (p in c("afex", "phia", "snow", "nlme", "lme4", "lmerTest", "gamm4", "data.table", "paran", "psych", "brms", "corrplot", "metafor")) library(p, character.only = TRUE)' > /dev/null 2>&1 \
         || { echo "missing: AFNI R packages"; exit 1; }
+    # AFNI R programs (load R_io.so at startup)
+    3dMVM -help > /dev/null 2>&1 || { echo "not working: 3dMVM (R_io.so)"; exit 1; }
     # PALM gifti mex files for octave
     test -f /opt/palm/fileio/@gifti/private/xml_parser.mex
     # MATLAB (without license, only the installation) and SPM for MATLAB
