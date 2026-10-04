@@ -85,7 +85,9 @@ Images in `/home/rglz/containers/` (history in `gfae_log.md` there).
 | `set -o pipefail` + `cmd \| head -1`: SIGPIPE fails the build | `awk 'NR == 1'` instead of `head -1` |
 | `set -e` does not stop at `! cmd` | use `if cmd; then …; exit 1; fi` in `%test` |
 | Removing AFNI's `-dev` build packages also removes packages that depend on them (e.g. `libgl1-mesa-dev`) | gfae keeps the build packages |
-| `rPkgsInstall` does not fail when a package fails to install | `%test` loads all AFNI R packages |
+| `rPkgsInstall` does not fail when a package fails to install | `%post` and `%test` load all AFNI R packages |
+| `rPkgsInstall`: `@global_parse: Command not found`, nothing installed (no error) | run it with `/opt/afni/bin` on the `PATH` (it calls other AFNI scripts by name) |
+| AFNI R programs: `** ERROR: Failed to load R_io.so` (exit status 78) | the CMake build installs it as `lib/librio.so`, but AFNI's R code looks for `R_io.so` on the `PATH`: link `bin/R_io.so → ../lib/librio.so`; `%test` runs `3dMVM -help` |
 | `%test` prints `/root/matlab/startup.m … Read-only file system` | harmless noise from FreeSurfer's environment setup |
 | apt: `libjpeg62-dev` (AFNI) conflicts with `libjpeg-turbo8-dev` (required via `libhdf5-dev` by `libgdal-dev` and `liboctave-dev`) | `libjpeg-dev`: AFNI's `find_package(JPEG 62)` also accepts libjpeg-turbo 8 |
 | apt: `pkg-config` conflicts with `pkgconf`, which other packages pull in | request `pkgconf` (it provides `pkg-config`) |
