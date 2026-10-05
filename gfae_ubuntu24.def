@@ -8,6 +8,7 @@
 #
 # Build (without root access), from this directory, with the gfae-base image next to it as gfae-base.sif:
 #   ./build.sh gfae_ubuntu24.def gfae
+# base-image: gfae-base_20261005T080127Z_md5f055a1afebf0fad192febd492e336f6b_git70de9adedac09b2f4770f66344a32b2f450ef8da.sif
 # base-sha256: 5ccc554e21a83ac747e6d1556c2477b9a4e9cf3ed3da8cd98afbefbea2ca6f99
 
 Bootstrap: localimage
@@ -15,7 +16,7 @@ From: gfae-base.sif
 
 %labels
     Description gfae - general fMRI analysis environment
-    Base gfae-base (see base-sha256 in gfae_ubuntu24.def)
+    Base gfae-base_20261005T080127Z_md5f055a1afebf0fad192febd492e336f6b_git70de9adedac09b2f4770f66344a32b2f450ef8da.sif (sha256 5ccc554e21a83ac747e6d1556c2477b9a4e9cf3ed3da8cd98afbefbea2ca6f99)
     conda_base_env Python 3.12, numpy 2.5, nibabel 5.4, pandas 2.3, nipype 1.10 (pins/ubuntu24/base_env.conda.lock)
     ciftify 2.3.3 with patches/ciftify-2.3.3-modern.patch
     MSM v3.0FSL (msm_ubuntu_v3)

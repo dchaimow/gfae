@@ -7,6 +7,7 @@
 #
 # Build (without root access), from this directory, with the gfae image next to it as gfae.sif:
 #   ./build.sh gfae_matlab_ubuntu24.def gfae_matlab
+# base-image: TO_BE_SET_AFTER_BUILDING_GFAE
 # base-sha256: TO_BE_SET_AFTER_BUILDING_GFAE
 
 Bootstrap: localimage
@@ -17,7 +18,7 @@ From: gfae.sif
 
 %labels
     Description gfae_matlab - gfae with MATLAB
-    Base gfae (see base-sha256 in gfae_matlab_ubuntu24.def)
+    Base TO_BE_SET_AFTER_BUILDING_GFAE
     MATLAB R2026a Update 5 (mpm)
     SPM 25.01.02 (for MATLAB)
 

@@ -71,7 +71,7 @@ nice -n 19 ./build.sh gfae-base_ubuntu24.def gfae-base 2>&1 | tee build_gfae-bas
    ```bash
    nice -n 19 ./build.sh gfae-base_ubuntu24.def gfae-base 2>&1 | tee build_gfae-base.log
    ```
-3. Check that the log ends with `tests passed: …`. Link the image and record its sha256 in `gfae_ubuntu24.def` (line `# base-sha256: …`), then commit:
+3. Check that the log ends with `tests passed: …`. Link the image and record it in `gfae_ubuntu24.def`: its file name in `# base-image: …`, its sha256 in `# base-sha256: …` (checked by `build.sh`), and both in the `Base` label (so that `apptainer inspect` shows the base of an image); then commit:
    ```bash
    ln -sfn gfae-base_<time>_md5<…>_git<…>.sif gfae-base.sif
    sha256sum gfae-base.sif
@@ -80,7 +80,7 @@ nice -n 19 ./build.sh gfae-base_ubuntu24.def gfae-base 2>&1 | tee build_gfae-bas
    ```bash
    nice -n 19 ./build.sh gfae_ubuntu24.def gfae 2>&1 | tee build_gfae.log
    ```
-5. Check the log, link the image as `gfae.sif`, record its sha256 in `gfae_matlab_ubuntu24.def`, commit (as in step 3).
+5. Check the log, link the image as `gfae.sif`, record its file name and sha256 in `gfae_matlab_ubuntu24.def` (as in step 3), commit.
 6. Build gfae_matlab:
    ```bash
    nice -n 19 ./build.sh gfae_matlab_ubuntu24.def gfae_matlab 2>&1 | tee build_gfae_matlab.log
