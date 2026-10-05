@@ -8,7 +8,7 @@
 #
 # Build (without root access), from this directory, with the gfae-base image next to it as gfae-base.sif:
 #   ./build.sh gfae_ubuntu24.def gfae
-# base-sha256: TO_BE_SET_AFTER_BUILDING_GFAE_BASE
+# base-sha256: 5ccc554e21a83ac747e6d1556c2477b9a4e9cf3ed3da8cd98afbefbea2ca6f99
 
 Bootstrap: localimage
 From: gfae-base.sif
