@@ -1,0 +1,36 @@
+# Conda base environment of gfae_ubuntu24.def: Python command line tools that are available by default (analysis
+# libraries belong into project environments). Top-level specifications only; make_locks.sh solves them into
+# base_env.conda.lock (exact URLs and sha256), which is what the definition file installs.
+name: base
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - setuptools
+  - wheel
+  # conda itself (for users, and FSL's installer uses it)
+  - conda=26.9
+  # ciftify 2.3.3 (installed with patches/ciftify-2.3.3-modern.patch) and its dependencies
+  - numpy=2
+  - scipy
+  - pandas=2.3          # pandas 3 is untested with the patched ciftify
+  - nibabel=5.4
+  - nilearn=0.14
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - pyyaml
+  - docopt
+  - pybids=0.22
+  # pydeface (from PyPI, see base_env.pip.lock) needs nipype
+  - nipype=1.10
+  # data management and BIDS conversion
+  - datalad=1.6
+  - git-annex
+  - heudiconv=1.5
+  - dcm2bids=3.3
+  - templateflow=25.1
+  # notebooks
+  - jupyterlab=4.6
+  - notebook=7.6

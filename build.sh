@@ -5,7 +5,11 @@ export APPTAINER_TMPDIR=~/ptmp/tmp
 export APPTAINER_CACHEDIR=~/ptmp/tmp
 export APPTAINER_BINDPATH=
 
-deffile=${1-gfae.def}
+if [ $# -lt 1 ]; then
+  echo "usage: $0 <definition file> [image name]   (e.g. $0 gfae_ubuntu24.def gfae)"
+  exit 1
+fi
+deffile=$1
 container_fname=${2-$(basename $deffile .def)}.sif
 
 if output=$(git status --porcelain) && [ -z "$output" ]; then
@@ -14,6 +18,20 @@ if output=$(git status --porcelain) && [ -z "$output" ]; then
 else
   # Uncommitted changes
   git_sha=UNAVAILABLE
+fi
+
+# Layered recipes (Bootstrap: localimage): the base image (From:, e.g. a link gfae-base.sif to the built image) must
+# have the sha256 recorded in the definition file as "# base-sha256: <sha256>"
+if grep -q "^Bootstrap: localimage" $deffile; then
+  base=$(awk '/^From:/ {print $2; exit}' $deffile)
+  expected=$(sed -n 's/^# base-sha256: //p' $deffile)
+  actual=$(sha256sum "$base" | cut -d' ' -f1) || exit 1
+  if [ "$actual" != "$expected" ]; then
+    echo "base image $base ($(readlink -f $base)) has sha256 $actual,"
+    echo "but $deffile expects base-sha256: $expected"
+    exit 1
+  fi
+  echo "base image $base: sha256 matches"
 fi
 
 # Build the container (without running %test, so that the image is kept if a test fails)

@@ -1,0 +1,94 @@
+# gfae_matlab: gfae with MATLAB R2026a and SPM 25.01.02 for MATLAB (see README.md). Built on top of the gfae image
+# (gfae_ubuntu24.def, Bootstrap: localimage); only MATLAB and SPM are added here.
+# The environment of this layer is in /.singularity.d/env/87-gfae-matlab.sh (see gfae-base_ubuntu24.def).
+#
+# MATLAB requires a license at runtime: set MLM_LICENSE_FILE (e.g. 27000@kyb-lic-matlab.mpi.localnet, or
+# APPTAINERENV_MLM_LICENSE_FILE outside the container).
+#
+# Build (without root access), from this directory, with the gfae image next to it as gfae.sif:
+#   ./build.sh gfae_matlab_ubuntu24.def gfae_matlab
+# base-sha256: TO_BE_SET_AFTER_BUILDING_GFAE
+
+Bootstrap: localimage
+From: gfae.sif
+
+%files
+    pins/ubuntu24/matlab-deps_r2026a_ubuntu24.04.txt /opt/container/pins/matlab-deps_r2026a_ubuntu24.04.txt
+
+%labels
+    Description gfae_matlab - gfae with MATLAB
+    Base gfae (see base-sha256 in gfae_matlab_ubuntu24.def)
+    MATLAB R2026a Update 5 (mpm)
+    SPM 25.01.02 (for MATLAB)
+
+%post -c /bin/bash
+    set -euo pipefail
+    tmp=$(mktemp -d)
+    export DEBIAN_FRONTEND=noninteractive
+
+    # download a file and verify its sha256 checksum: fetch <url> <sha256> <destination file>
+    fetch() {
+        curl -fsSL --retry 5 -o "$3" "$1"
+        echo "$2  $3" | sha256sum -c --quiet -
+    }
+
+    # MATLAB dependencies (MathWorks' list for R2026a on Ubuntu 24.04; apt packages from the snapshot of gfae-base)
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends ca-certificates curl unzip \
+        $(grep -v '^#' /opt/container/pins/matlab-deps_r2026a_ubuntu24.04.txt | tr '\n' ' ')
+
+    # MATLAB R2026a Update 5 via mpm (MathWorks Package Manager; mpm itself is only available in its current
+    # version); no license required at build time
+    curl -fsSL --retry 5 -o ${tmp}/mpm https://www.mathworks.com/mpm/glnxa64/mpm
+    chmod +x ${tmp}/mpm
+    ${tmp}/mpm install \
+        --release=R2026aU5 \
+        --destination=/opt/MATLAB/R2026a \
+        --products \
+            MATLAB \
+            Bioinformatics_Toolbox \
+            Curve_Fitting_Toolbox \
+            Deep_Learning_Toolbox \
+            Financial_Toolbox \
+            Global_Optimization_Toolbox \
+            Image_Processing_Toolbox \
+            MATLAB_Compiler \
+            Mapping_Toolbox \
+            Instrument_Control_Toolbox \
+            Medical_Imaging_Toolbox \
+            Optimization_Toolbox \
+            Parallel_Computing_Toolbox \
+            Reinforcement_Learning_Toolbox \
+            Robotics_System_Toolbox \
+            Signal_Processing_Toolbox \
+            Statistics_and_Machine_Learning_Toolbox \
+            Symbolic_Math_Toolbox \
+            Wavelet_Toolbox
+    mkdir -p /usr/local/MATLAB
+    ln -s /opt/MATLAB/R2026a /usr/local/MATLAB/R2026a
+
+    # SPM 25.01.02 (for MATLAB)
+    fetch https://github.com/spm/spm/releases/download/25.01.02/spm_25.01.02.zip \
+        562c8036aa11c0d2cfe0fbff123f482c3ec8cb5ef56be521af26caae5481db2a ${tmp}/spm.zip
+    unzip -q ${tmp}/spm.zip -d /opt
+
+    # environment of this layer
+    cat > /.singularity.d/env/87-gfae-matlab.sh <<'EOF'
+# gfae_matlab: MATLAB R2026a and SPM 25.01.02 for MATLAB
+export MATLAB_HOME=/opt/MATLAB/R2026a
+export PATH=$MATLAB_HOME/bin:$PATH
+export MATLABPATH=/opt/spm${MATLABPATH:+:$MATLABPATH}
+EOF
+    chmod 644 /.singularity.d/env/87-gfae-matlab.sh
+
+    # clean up
+    rm -rf /var/lib/apt/lists/* ${tmp}
+
+%test
+    set -e
+    # MATLAB (without license, only the installation) and SPM for MATLAB
+    grep -q "<release>R2026a</release>" ${MATLAB_HOME}/VersionInfo.xml
+    grep -q "<description>Update 5</description>" ${MATLAB_HOME}/VersionInfo.xml
+    command -v matlab > /dev/null || { echo "missing: matlab"; exit 1; }
+    test -f /opt/spm/spm.m
+    echo "all tests passed"

@@ -1,66 +1,75 @@
-# Generic fmri analysis environment
-This is a repo template for container based fMRI analysis development. `gfae.def` defines a apptainer container including a set of useful fMRI analysis software. `container_resource` contains singularity definition files for individual software packages, meant to assist in adapting `gfae.def` to your own needs. Similarly there are folder groupoing definition files for individual components for a specific gfae version (e.g. base image).
+# general fMRI analysis environment
+This repository contains the Apptainer definition files of **gfae**, a container with fMRI analysis software (AFNI, FSL, FreeSurfer, ANTs, Connectome Workbench, ciftify, CAT12/SPM, LAYNII, nighres, …), and a variant with MATLAB.
 
-The current recipe is `gfae_ubuntu22.def`. It is based on Ubuntu 22.04, with all software versions pinned (see "Pinning" below), and contains:
-* conda (Miniforge 24.3.0-0), with the base environment pinned to that of `gfae_20240902T132553Z` (all packages, see `pins/`), e.g.:
-  * python 3.11.9
-  * nipype 1.8.5
-  * notebook 7.2.2
-  * jupyterlab 4.2.5
-  * numpy 1.26.4 (gradunwarp, ciftify, afni)
-  * scipy 1.14.1 (gradunwarp, ciftify, afni)
-  * nibabel 3.2.2 (gradunwarp, ciftify; ciftify requires nibabel < 4)
-  * seaborn 0.13.2 (ciftify)
-  * nilearn 0.10.2 (ciftify)
-  * matplotlib 3.9.1 (ciftify, afni)
-  * pandas 2.2.2 (ciftify)
-  * flask 3.0.3 (afni)
-  * flask-cors 5.0.0 (afni)
-* FSL 6.0.7.13
-* FreeSurfer 7.3.2 (license.txt required to be present in user home directory)
-* CAT12.8.2 r2166 and SPM12 r7771 together with Matlab 2017b (v93) runtime
-* gradunwarp 1.2.2 (Human Connectome Project version, commit ff082ef)
-* Connectome workbench 2.0.0 (HCP release)
-* ciftify 2.3.3, with MSM v3.0FSL (replaces FSL's `msm`, which is kept as `msm_fsl`)
-* AFNI 26.1.02 (built from source, incl. SUMA and the R programs; atlases `afni_atlases_dist_2024_0503`)
-* R 4.6.0 with the AFNI R packages (CRAN snapshot of 2026-05-09)
-* ANTs 2.5.3
-* ITK-snap 4.0.2
-* convert3d 1.0.0
-* dcm2niix v1.0.20240202
-* jq 1.7.1
-* pydeface 2.0.2
-* laynii 2.7.0
-* firefox 140.11.0esr (Mozilla release archive)
-* gnu parallel 20210822
-* emacs 27.1
-* vim 8.2
-* nighres 1.5.1
-* GNU octave 6.4.0
-* PALM alpha 119
+**Current recipes: Ubuntu 24.04** (`gfae-base_ubuntu24.def` → `gfae_ubuntu24.def` → `gfae_matlab_ubuntu24.def`), with current software versions, see below. Built images and their history: `/home/rglz/containers/` and `gfae_log.md` there.
 
-See also components_ubuntu22/todo.md for installation notes and issues (from the older, unpinned recipes).
+The repository is also a toolbox for building containers:
+* `notes/pinning.md`: how and why everything is pinned, what was tested, and the build pitfalls met so far (with fixes), kept up to date with every recipe change.
+* Variants of the whole recipe for other systems: `gfae_ubuntu22.def`, `gfae_matlab_ubuntu22.def` (Ubuntu 22.04, tested and pinned, see below) and `gfae_rocky9_wip.def` (Rocky Linux 9, work in progress). The Ubuntu base is not a fixed choice, but the one that has worked so far; the system is therefore part of the file names.
+* Manually tested recipes for single components, as reference when building new containers: `components_ubuntu22/` (Ubuntu 22.04), `components_rocky8/` (Rocky Linux 8), `components_misc/`.
+* `build.sh` (builds, tests and names images), `pins/` (version pins and lock files), `patches/` (ciftify patch), `bashrc_conda` (prompt setup used by the recipes; `bashrc` is an older version).
 
-## MATLAB variant
+## Ubuntu 24.04 recipes (current)
 
-There is also a variant that includes MATLAB R2024b Update 9 (installed via mpm) and SPM 25.01.02 for MATLAB (in addition to the standalone SPM12): `gfae_matlab_ubuntu22.def`. It is `gfae_ubuntu22.def` plus the MATLAB parts (keep the two files in sync; `diff` them to see the differences). Note: for MATLAB to run, the path to a valid license file or the address of a license server must be provided via environment variables (e.g. `MLM_LICENSE_FILE`) when starting the container. It is possible to set `APPTAINERENV_MLM_LICENSE_FILE` outside the container to have it available inside the container as `MLM_LICENSE_FILE`.
+Three definition files, each built on top of the image of the previous one (`Bootstrap: localimage`), so that the frequently changed software can be rebuilt without recompiling AFNI:
 
-## Pinning
+1. `gfae-base_ubuntu24.def`: Ubuntu 24.04 with all apt packages (from the Ubuntu snapshot of 2026-09-18), R 4.6.1 with AFNI's R packages, AFNI 26.2.09 (compiled, incl. SUMA).
+2. `gfae_ubuntu24.def`: everything else (see below).
+3. `gfae_matlab_ubuntu24.def`: MATLAB R2026a Update 5 and SPM 25.01.02 for MATLAB.
 
-Both recipes pin all software versions, so that a rebuild produces the same software:
-* the base image by digest (`ubuntu:jammy-20260410`), and all apt packages from the Ubuntu snapshot archive (`snapshot.ubuntu.com`, 2026-05-09)
-* the conda base environment: `pins/base_env_conda_pins.txt` (all conda packages as `name==version=build`) and `pins/base_env_pip_pins.txt` (all pip packages, installed with `--no-deps`), generated with `pins/make_base_env_pins.py` from the base environment of `gfae_20240902T132553Z`; there is no `conda update`, and pip installs do not change other packages (unpinned pip installs had upgraded nibabel and broken ciftify)
-* all downloads by version, verified by their sha256 checksum (the build fails if a file changed); git sources (AFNI, nighres and its java dependencies, gradunwarp) by commit
+| Software | Version |
+|---|---|
+| conda base environment (command line tools; analysis libraries belong into project environments) | Python 3.12, numpy 2.5, nibabel 5.4, pandas 2.3, nipype 1.10, jupyterlab 4.6 (`pins/ubuntu24/`) |
+| ciftify | 2.3.3 with `patches/ciftify-2.3.3-modern.patch` (current nibabel/numpy/pandas, FreeSurfer ≥ 7.4) |
+| FSL | 6.0.7.23 |
+| FreeSurfer | 8.2.0 (with the patch archive of 2026-06-25; incl. SynthSeg, SynthStrip, SynthMorph) |
+| Connectome Workbench | 2.2.1 |
+| MSM | v3.0FSL (replaces FSL's `msm`, which is kept as `msm_fsl`) |
+| ANTs | 2.6.5 |
+| CAT12.9 with SPM25 | standalone (`spm25`, `cat_standalone.sh`), MATLAB Runtime R2023b |
+| nighres | 1.5.2 (commit f1e4264), as wheels for Python 3.11–3.13 in `/opt/nighres/wheels` (see below) |
+| gradunwarp | 1.2.3+ (commit da4ceba, incl. the fixes of September 2026) |
+| pydeface | 2.1.0 |
+| data/BIDS tools | datalad 1.6.5 + git-annex, heudiconv 1.5.1, dcm2bids 3.3.1, BIDS validator 3.0.2 (`bids-validator-deno`), templateflow 25.1.1 |
+| LAYNII | 2.10.0 |
+| ITK-SNAP | 4.4.0 |
+| convert3d | 1.4.4 |
+| dcm2niix / niimath / jq | v1.0.20260724 / v1.0.20260924 / 1.8.2 |
+| PALM | git commit 9086eff (2026-07-13), with GNU Octave 8.4 |
+| Firefox ESR | 153.4.0 |
+
+Changes compared with the Ubuntu 22.04 variant that change results: FreeSurfer 8 (recon-all with SynthSeg/SynthStrip), CAT12.9 (vs. 12.8.2), ANTs 2.6 (changed defaults of `antsRegistrationSyN*.sh`), gradunwarp fixes.
+
+**nighres in a project environment** (inside the container): `pip install --no-deps /opt/nighres/wheels/nighres-1.5.2-cp312-cp312-linux_x86_64.whl` (wheel matching the environment's Python), plus its dependencies `nibabel scipy matplotlib psutil dipy "antspyx==0.6.3"` and `numpy<2.4` (required by ANTsPy). The container sets `JCC_JDK` to the Java runtime of nighres.
+
+**TemplateFlow:** templates are downloaded to `~/.cache/templateflow`, unless `TEMPLATEFLOW_HOME` is set (e.g. `APPTAINERENV_TEMPLATEFLOW_HOME=<shared directory>` outside the container).
+
+**Pinning:** all software versions are pinned, so that a rebuild produces the same software:
+* the base image by digest, and all apt packages from a dated snapshot of the Ubuntu archive (`snapshot.ubuntu.com`), which apt prefers over all other sources
+* the conda environments from lock files (exact package URLs with sha256, installed with micromamba without solving), generated from `pins/ubuntu24/base_env.yml` and the nighres specifications with `pins/ubuntu24/make_locks.sh`; pip packages by version with hashes, without dependencies
+* all downloads by version, verified by their sha256 checksum (the build fails if a file changed); git sources by commit
 * R by package version (CRAN apt repository), the R packages from a dated CRAN snapshot (Posit Package Manager)
-* not pinned: the MathWorks package manager `mpm` (only available in its current version; MATLAB itself is pinned by `--release=R2024bU9`)
+* not pinned: the MathWorks package manager `mpm` (only available in its current version; MATLAB itself is pinned by `--release=R2026aU5`)
 
-Reasons, history and build pitfalls: `notes/pinning.md`. To update a component, change its version, URL and checksum together (`sha256sum` of the new file). `%post` stops at the first error (`set -euo pipefail`).
+To update a component, change its version, URL and checksum together (`sha256sum` of the new file). `%post` stops at the first error (`set -euo pipefail`). How and why, what was tested, build pitfalls: `notes/pinning.md`.
 
-Known issues of earlier images (unpinned recipe): `gfae_20260509T025235Z` has nibabel 5.4.2, which breaks ciftify; `gfae_20260520T002955Z` contains no FSL (the FSL installation failed without stopping the build).
+**Building:** `build.sh` builds an image with `--fakeroot`, names it `<name>_<build time>_md5<checksum>_git<commit>.sif` (commit only if the repository has no uncommitted changes), then runs its `%test` section (`apptainer test`); if a test fails, the image is kept and the script reports `TESTS FAILED`. Builds need internet access (on nyx: the login node, in tmux, with `nice`); gfae-base takes several hours (AFNI is compiled). Build the layers in order and link each built image to the name the next definition file expects (`gfae-base.sif`, `gfae.sif`); record its sha256 as `# base-sha256:` in the next definition file, `build.sh` checks it:
+```bash
+./build.sh gfae-base_ubuntu24.def gfae-base
+ln -sfn gfae-base_<time>_md5<…>_git<…>.sif gfae-base.sif && sha256sum gfae-base.sif   # -> base-sha256 in gfae_ubuntu24.def
+./build.sh gfae_ubuntu24.def gfae
+ln -sfn gfae_<…>.sif gfae.sif && sha256sum gfae.sif                                  # -> base-sha256 in gfae_matlab_ubuntu24.def
+./build.sh gfae_matlab_ubuntu24.def gfae_matlab
+```
 
-## Building
+## Ubuntu 22.04 variant (frozen)
 
-`./build.sh gfae_ubuntu22.def gfae` (or `./build.sh gfae_matlab_ubuntu22.def gfae_matlab`) builds the image with `--fakeroot` and names it `<name>_<build time>_md5<checksum>_git<commit>.sif`. A build takes several hours (AFNI is compiled; use a node with many cores, in tmux or as a job). The `%test` section checks the versions of the main software and that the programs of all packages are available. `build.sh` builds with `--notest` and then runs `apptainer test` on the named image, so the image is kept if a test fails (the script then reports `TESTS FAILED`).
+`gfae_ubuntu22.def` and `gfae_matlab_ubuntu22.def` are complete, tested and pinned recipes for Ubuntu 22.04: single files without layers; the MATLAB variant is the same recipe plus MATLAB R2024b and SPM 25.01.02 for MATLAB (keep the two in sync). Build: `./build.sh gfae_ubuntu22.def gfae`. Differences from the 24.04 recipes:
+* conda base environment pinned to an older state (python 3.11, numpy 1.26, nibabel 3.2.2) with unpatched ciftify 2.3.3, which needs nibabel < 4 (its report commands `ciftify_statclust_report`, `ciftify_peaktable`, `ciftify_atlas_report` don't work with pandas 2); pinned by `name==version=build` specifications (`pins/base_env_conda_pins.txt`, `pins/base_env_pip_pins.txt`, generated from an existing image with `pins/make_base_env_pins.py`), which conda still solves, instead of lock files
+* AFNI 26.1.02, FSL 6.0.7.13, FreeSurfer 7.3.2, Connectome Workbench 2.0.0, ANTs 2.5.3, LAYNII 2.7.0, ITK-SNAP 4.0.2, PALM alpha119, Octave 6.4
+* CAT12.8.2 with SPM12, MATLAB Runtime R2017b (needs `libncurses5`, not available on Ubuntu 24.04)
+* nighres 1.5.1 built for and installed into the base environment
+* Firefox ESR 140 (no longer supported since 2026-09-29)
 
 ## General usage as a template for container based development
 Currently the repo is mainly used to assist in developing and building `gfae` containters. It could also be used as described below as a template for repositories for (fMRI analysis) container based development. This hasn't been tested recently.
@@ -78,9 +87,9 @@ cd my-new-repo
 ```
 
 ### 3. Build singularity container
-Optionally adapt gfae.def to your needs first, then
+Optionally adapt gfae_ubuntu24.def to your needs first, then
 ```
-./build.sh gfae.def
+./build.sh gfae_ubuntu24.def gfae   # after building gfae-base, see "Ubuntu 24.04 recipes"
 ```
 
 ### 4. Start singularity container and start analyzing/developing
@@ -91,7 +100,7 @@ Optionally adapt gfae.def to your needs first, then
 Write scripts and code, etc. in `code/` (bound to `/opt/code/` inside container). Change and commit repo as needed.
 
 ### 5. Prepare for distribution
-Create new singularity .def file based on gfae.def.
+Create new singularity .def file based on gfae_ubuntu24.def.
 
 Add:
 * `%files` section: `code/* /opt/code/`

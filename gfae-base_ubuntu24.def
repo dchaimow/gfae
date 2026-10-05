@@ -1,0 +1,165 @@
+# gfae-base: base layer of gfae (see README.md): Ubuntu 24.04 with all apt packages of gfae, R with the AFNI R
+# packages, and AFNI compiled from source. It changes rarely and is the base of gfae_ubuntu24.def
+# (Bootstrap: localimage), so that the other software can be rebuilt without recompiling AFNI.
+#
+# Pinning: base image by digest, apt packages from a fixed snapshot of the Ubuntu archive (preferred over all other
+# sources), R by package version, R packages from a dated CRAN snapshot, downloads by sha256, git sources by commit.
+#
+# Each layer writes its environment to its own file in /.singularity.d/env/ (instead of %environment, which would be
+# replaced by the next layer): this one to 80-gfae-base.sh.
+#
+# Build (without root access), from this directory:
+#   ./build.sh gfae-base_ubuntu24.def gfae-base
+
+Bootstrap: docker
+# ubuntu:noble-20260917 (multi-arch index digest)
+From: ubuntu@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55
+
+%labels
+    Description gfae-base - base layer of gfae (general fMRI analysis environment)
+    Ubuntu 24.04 (ubuntu:noble-20260917, apt packages from snapshot.ubuntu.com, 20260918T000000Z)
+    R 4.6.1 (CRAN), AFNI R packages from the CRAN snapshot of 2026-09-18
+    AFNI 26.2.09 (built from source, with SUMA and the R programs), atlases afni_atlases_dist_2024_0503
+
+%post -c /bin/bash
+    set -euo pipefail
+    tmp=$(mktemp -d)
+    export DEBIAN_FRONTEND=noninteractive
+
+    # download a file and verify its sha256 checksum: fetch <url> <sha256> <destination file>
+    fetch() {
+        curl -fsSL --retry 5 -o "$3" "$1"
+        echo "$2  $3" | sha256sum -c --quiet -
+    }
+
+    # Ubuntu packages from a fixed snapshot of the Ubuntu archive. The snapshot is only available via https, so
+    # ca-certificates are first installed from the regular archive (which may also update other packages, e.g.
+    # openssl); the snapshot is then preferred over everything else (Pin-Priority 1001), and dist-upgrade returns all
+    # packages to their snapshot versions
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends ca-certificates
+    sed -i -E 's#http://(archive|security)\.ubuntu\.com/ubuntu/?#https://snapshot.ubuntu.com/ubuntu/20260918T000000Z/#' \
+        /etc/apt/sources.list.d/ubuntu.sources
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99snapshot
+    printf 'Package: *\nPin: origin snapshot.ubuntu.com\nPin-Priority: 1001\n' > /etc/apt/preferences.d/99snapshot
+    rm -rf /var/lib/apt/lists/*
+    apt-get update -qq
+    apt-get -y -q --allow-downgrades dist-upgrade
+
+    # all apt packages of gfae (runtime and build packages are kept, the container is also used for development)
+    apt-get install -y -q --no-install-recommends \
+        `# basic tools` \
+        sudo wget curl ca-certificates gnupg unzip bzip2 xz-utils zstd git nano binutils plocate tree bc \
+        bash-completion locales locales-all parallel emacs vim \
+        build-essential cmake ninja-build pkgconf gfortran \
+        `# FSL` \
+        file dc mesa-utils pulseaudio libquadmath0 libgtk2.0-0t64 libgomp1 tcl tk \
+        `# AFNI (incl. SUMA)` \
+        tcsh xfonts-base xfonts-100dpi xterm xvfb netpbm libjpeg-turbo-progs gsl-bin qhull-bin \
+        python-is-python3 python3-matplotlib python3-numpy python3-flask python3-flask-cors python3-pil \
+        f2c libf2c2 libf2c2-dev zlib1g-dev libexpat1-dev libqhull-dev \
+        libmotif-dev libxm4 libjpeg62 libjpeg-dev libxt-dev libxpm-dev libxmu-dev libxi-dev libx11-dev libxext-dev \
+        libglu1-mesa libglu1-mesa-dev libglw1t64-mesa libglw1-mesa-dev libglut3.12 libglut-dev libglew2.2 libglew-dev \
+        libglib2.0-dev libgsl27 libgsl-dev libosmesa6 \
+        `# R packages (AFNI)` \
+        libssl-dev libcurl4-openssl-dev libxml2-dev libgdal-dev libopenblas-dev libnode-dev libudunits2-dev \
+        `# PALM` \
+        octave octave-dev \
+        `# ITK-SNAP` \
+        libqt5gui5t64 libopengl0 \
+        `# Firefox` \
+        libgtk-3-0t64 libdbus-glib-1-2 libasound2t64 libx11-xcb1 libxtst6 libpci-dev libegl-mesa0 libgl1-mesa-dev \
+        `# MATLAB Runtime R2023b (MathWorks' list for R2024b on Ubuntu 24.04, plus the R2023b extras)` \
+        libatomic1 libc6 libcairo-gobject2 libcairo2 libcap2 libcrypt1 libcups2t64 libdrm2 libfontconfig1 \
+        libfribidi0 libgbm1 libgdk-pixbuf-2.0-0 libgl1 libglib2.0-0t64 libgstreamer-plugins-base1.0-0 \
+        libgstreamer1.0-0 libgtk2.0-0t64 libice6 libltdl7 libnettle8t64 libnspr4 libnss3 libpam0g libpango-1.0-0 \
+        libpangocairo-1.0-0 libpangoft2-1.0-0 libpixman-1-0 libsndfile1 libtirpc3t64 libudev1 libuuid1 \
+        libwayland-client0 libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libxfont2 libxft2 libxinerama1 \
+        libxrandr2 libxt6t64 libxxf86vm1 net-tools procps zlib1g make \
+        gstreamer1.0-libav libdw1t64 libodbc2 libodbcinst2 libsystemd0 \
+        `# GUI tools` \
+        gnome-tweaks gedit evince eog gnome-terminal nautilus
+    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
+
+    # R 4.6.1 from CRAN (required by AFNI's R programs)
+    fetch https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc \
+        ffa734347fd95fd7393f575448ba5e52cf3137067db77224d4857863351e4e8f ${tmp}/cran.asc
+    mkdir -p /etc/apt/keyrings
+    gpg --dearmor -o /etc/apt/keyrings/cran.gpg ${tmp}/cran.asc
+    echo "deb [signed-by=/etc/apt/keyrings/cran.gpg] https://cloud.r-project.org/bin/linux/ubuntu noble-cran40/" \
+        > /etc/apt/sources.list.d/cran.list
+    apt-get update -qq
+    apt-get install -y -q --no-install-recommends r-base-core=4.6.1-6.2404.0 r-base-dev=4.6.1-6.2404.0
+    apt-mark hold r-base-core r-base-dev
+
+    # AFNI 26.2.09, built from source (all programs incl. GUI, SUMA and R programs), with the system python; nifti and
+    # gifti libraries pinned to the commits current at the time of the release (AFNI would otherwise fetch their current
+    # versions), gts is pinned by AFNI itself
+    git clone -q --depth 1 --branch AFNI_26.2.09 https://github.com/afni/afni.git ${tmp}/afni
+    test "$(git -C ${tmp}/afni rev-parse HEAD)" = 8252af5308d26b90cab50e68eb9b18a4e0351c26
+    git clone -q https://github.com/NIFTI-Imaging/nifti_clib.git ${tmp}/nifti_clib
+    git -C ${tmp}/nifti_clib checkout -q 8f72d1165aa62320cc6982d6ddd71a7f6b9924c5
+    git clone -q https://github.com/NIFTI-Imaging/gifti_clib.git ${tmp}/gifti_clib
+    git -C ${tmp}/gifti_clib checkout -q d3e873d8539d9b469daf7db04093da1d7e73d4f7
+    # AFNI's cmake configuration requires the compilers to be set explicitly
+    export CC=/usr/bin/gcc CXX=/usr/bin/g++
+    cmake -S ${tmp}/afni -B ${tmp}/afni_build -GNinja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/opt/afni \
+        -DCOMP_GUI=ON \
+        -DCOMP_SUMA=ON \
+        -DCOMP_RSTATS=ON \
+        -DUSE_OMP=ON \
+        -DSTANDARD_PYTHON_INSTALL=OFF \
+        -DPython_EXECUTABLE=/usr/bin/python3 \
+        -DFETCHCONTENT_SOURCE_DIR_NIFTI_CLIB=${tmp}/nifti_clib \
+        -DFETCHCONTENT_SOURCE_DIR_GIFTI_CLIB=${tmp}/gifti_clib
+    # 32 parallel jobs (the build runs on a shared login node, as it needs internet access)
+    ninja -C ${tmp}/afni_build -j 32 install
+    unset CC CXX
+    # the install does not set the executable bit of the python scripts
+    chmod a+x /opt/afni/bin/*.py
+    # AFNI templates and atlases (dated release), next to the programs as in AFNI's binary distribution
+    fetch https://afni.nimh.nih.gov/pub/dist/atlases/afni_atlases_dist_2024_0503.tgz \
+        276a38c859fa15ff925015de776deca578c1c193178f29241748c37744cda747 ${tmp}/afni_atlases.tgz
+    tar -xzf ${tmp}/afni_atlases.tgz --strip-components=1 -C /opt/afni/bin
+
+    # AFNI R packages, from the CRAN snapshot of the date of the apt snapshot
+    # (rPkgsInstall calls other AFNI scripts, which must be on the PATH; it does not fail if packages are not
+    # installed, therefore they are loaded afterwards)
+    export R_LIBS=/opt/R
+    mkdir -p ${R_LIBS}
+    # AFNI's R programs look for R_io.so on the PATH, the CMake build installs it as lib/librio.so
+    ln -s ../lib/librio.so /opt/afni/bin/R_io.so
+    PATH=/opt/afni/bin:$PATH rPkgsInstall -pkgs ALL -site https://packagemanager.posit.co/cran/__linux__/noble/2026-09-18
+    Rscript -e 'for (p in c("afex", "phia", "snow", "nlme", "lme4", "lmerTest", "gamm4", "data.table", "paran", "psych", "brms", "corrplot", "metafor")) library(p, character.only = TRUE)'
+
+    # environment of this layer
+    cat > /.singularity.d/env/80-gfae-base.sh <<'EOF'
+# gfae-base: AFNI (plugins are found next to the programs) and its R packages
+export PATH="/opt/afni/bin:$PATH"
+export R_LIBS=/opt/R
+EOF
+    chmod 644 /.singularity.d/env/80-gfae-base.sh
+
+    # clean up
+    rm -rf /var/lib/apt/lists/* ${tmp}
+
+%test
+    set -e
+    test "$(. /etc/os-release && echo ${VERSION_ID})" = "24.04"
+    R --version | awk 'NR == 1' | grep -q "R version 4.6.1"
+    afni -ver | grep -q "AFNI_26.2.09"
+    for program in 3dTcat 3dvolreg 3dDeconvolve 3dMVM afni_proc.py 1d_tool.py suma rPkgsInstall octave tcsh bc parallel; do
+        command -v ${program} > /dev/null || { echo "missing: ${program}"; exit 1; }
+    done
+    # AFNI: python scripts must be executable (command -v alone does not check that), libraries complete, templates
+    test -z "$(find /opt/afni/bin -maxdepth 1 -type f -name '*.py' ! -perm -a+x)" || { echo "not executable: AFNI python scripts"; exit 1; }
+    1d_tool.py -ver > /dev/null
+    if ldd /opt/afni/bin/afni /opt/afni/bin/suma | grep -q "not found"; then echo "missing: AFNI libraries"; exit 1; fi
+    test -f /opt/afni/bin/MNI152_2009_template_SSW.nii.gz
+    # AFNI R packages and R programs (load R_io.so at startup)
+    Rscript -e 'for (p in c("afex", "phia", "snow", "nlme", "lme4", "lmerTest", "gamm4", "data.table", "paran", "psych", "brms", "corrplot", "metafor")) library(p, character.only = TRUE)' > /dev/null 2>&1 \
+        || { echo "missing: AFNI R packages"; exit 1; }
+    3dMVM -help > /dev/null 2>&1 || { echo "not working: 3dMVM (R_io.so)"; exit 1; }
+    echo "all tests passed"

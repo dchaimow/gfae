@@ -1,0 +1,332 @@
+# gfae: general fMRI analysis environment (see README.md), Ubuntu 24.04, with all software versions pinned.
+# Built on top of gfae-base (gfae-base_ubuntu24.def: apt packages, R, AFNI), so that this layer can be rebuilt without
+# recompiling AFNI.
+#
+# Pinning: conda environments from lock files (pins/ubuntu24/, exact package URLs with sha256), pip packages with
+# hashes, downloads by sha256, git sources by commit; apt packages come from the snapshot set up in gfae-base.
+# The environment of this layer is in /.singularity.d/env/85-gfae.sh (see gfae-base_ubuntu24.def).
+#
+# Build (without root access), from this directory, with the gfae-base image next to it as gfae-base.sif:
+#   ./build.sh gfae_ubuntu24.def gfae
+# base-sha256: TO_BE_SET_AFTER_BUILDING_GFAE_BASE
+
+Bootstrap: localimage
+From: gfae-base.sif
+
+%labels
+    Description gfae - general fMRI analysis environment
+    Base gfae-base (see base-sha256 in gfae_ubuntu24.def)
+    conda_base_env Python 3.12, numpy 2.5, nibabel 5.4, pandas 2.3, nipype 1.10 (pins/ubuntu24/base_env.conda.lock)
+    ciftify 2.3.3 with patches/ciftify-2.3.3-modern.patch
+    MSM v3.0FSL (msm_ubuntu_v3)
+    FSL 6.0.7.23
+    FreeSurfer 8.2.0 (with patch_data_20260625)
+    ConnectomeWorkbench 2.2.1
+    ANTs 2.6.5
+    CAT12.9 with SPM25 (standalone, MATLAB Runtime R2023b Update 11)
+    nighres 1.5.2 (commit f1e4264), wheels for Python 3.11, 3.12, 3.13 in /opt/nighres/wheels
+    gradunwarp 1.2.3+ (commit da4ceba)
+    pydeface 2.1.0
+    datalad 1.6.5, git-annex, heudiconv 1.5.1, dcm2bids 3.3.1, bids-validator 3.0.2, templateflow 25.1.1
+    LAYNII 2.10.0
+    ITK-SNAP 4.4.0
+    convert3d 1.4.4
+    dcm2niix v1.0.20260724
+    niimath v1.0.20260924
+    jq 1.8.2
+    PALM (commit 9086eff, 2026-07-13)
+    Firefox 153.4.0esr
+
+%files
+    bashrc_conda /opt/etc/bashrc
+    pins/ubuntu24 /opt/container/pins
+    patches/ciftify-2.3.3-modern.patch /opt/container/patches/ciftify-2.3.3-modern.patch
+
+%post -c /bin/bash
+    set -euo pipefail
+    chmod 755 /opt/etc/bashrc
+    tmp=$(mktemp -d)
+    export DEBIAN_FRONTEND=noninteractive
+    pins=/opt/container/pins
+
+    # download a file and verify its sha256 checksum: fetch <url> <sha256> <destination file>
+    fetch() {
+        curl -fsSL --retry 5 -o "$3" "$1"
+        echo "$2  $3" | sha256sum -c --quiet -
+    }
+    apt-get update -qq
+
+    # micromamba 2.9.0 (only used to install the conda environments from their lock files)
+    fetch https://github.com/mamba-org/micromamba-releases/releases/download/2.9.0-0/micromamba-linux-64 \
+        366cd9cd8be14df1ab8ed50352a82111082a36686b2d389fdb79a92c3fafb3e3 ${tmp}/micromamba
+    chmod +x ${tmp}/micromamba
+    export MAMBA_ROOT_PREFIX=${tmp}/mamba
+    lock_install() {  # lock_install <prefix> <lock file>
+        ${tmp}/micromamba create -y -q -p "$1" -f "$2"
+    }
+
+    # conda base environment (Python command line tools), exactly as locked, plus pip packages with hashes
+    lock_install /opt/conda ${pins}/base_env.conda.lock
+    /opt/conda/bin/conda config --system --set auto_update_conda false
+    /opt/conda/bin/conda config --system --set show_channel_urls true
+    /opt/conda/bin/conda config --system --add channels conda-forge
+    /opt/conda/bin/conda config --system --remove channels defaults || true
+    pip_install="/opt/conda/bin/python -m pip install --no-deps --no-build-isolation --no-cache-dir"
+    ${pip_install} --require-hashes -r ${pins}/base_env.pip.lock
+
+    # ciftify 2.3.3 with the patch for current nibabel/numpy/pandas/setuptools and FreeSurfer >= 7.4
+    fetch https://files.pythonhosted.org/packages/39/75/bcde3f733820071153e914584522c32d42bfb70c9b8dfed137cea08149e5/ciftify-2.3.3.tar.gz \
+        c80c410aebcdd8653406f166608a2bd4d6b2f2b7bdc1640bd7ed6c15df45815a ${tmp}/ciftify.tar.gz
+    tar -xzf ${tmp}/ciftify.tar.gz -C ${tmp}
+    patch -d ${tmp}/ciftify-2.3.3 -p1 < /opt/container/patches/ciftify-2.3.3-modern.patch
+    ${pip_install} ${tmp}/ciftify-2.3.3
+
+    # gradunwarp (HCP version), master after 1.2.3 with the fixes of September 2026 (XYZ2RCS transform, Jacobian)
+    git clone -q https://github.com/Washington-University/gradunwarp.git ${tmp}/gradunwarp
+    git -C ${tmp}/gradunwarp checkout -q da4ceba
+    test "$(git -C ${tmp}/gradunwarp rev-parse HEAD | cut -c1-7)" = da4ceba
+    ${pip_install} ${tmp}/gradunwarp
+
+    # nighres 1.5.2 (master, commit f1e4264): wheels for Python 3.11, 3.12 and 3.13, to be installed into project
+    # environments (see README.md). The Java part is compiled with JCC, separately for each Python version, in build
+    # environments from lock files (conda-forge's jcc, with OpenJDK 8); its Java dependencies are pinned to commits
+    # (nighres' build script would update them to their current versions). OpenJDK 8 stays in /opt/nighres/jdk as
+    # the Java runtime of nighres (JCC_JDK).
+    git clone -q https://github.com/nighres/nighres ${tmp}/nighres
+    git -C ${tmp}/nighres checkout -q f1e4264e573ffa75863a77191b38c68715d60e08
+    for repo_commit in cbstools-public:27a5bfeb827de75a0b55f97ed8cf57a5b7cc8b11 \
+                       imcn-imaging:e943239cb2a7047dee4e306397fe78b7ff003dc7 \
+                       fbpa-tools:6f2d71770277c347dcee3cb46380cc49ec21b327; do
+        repo=${repo_commit%%:*}
+        git clone -q https://github.com/piloubazin/${repo}.git ${tmp}/nighres/${repo}
+        git -C ${tmp}/nighres/${repo} checkout -q -B master ${repo_commit##*:}
+    done
+    sed -i -E '/^\s*git pull\s*$/d' ${tmp}/nighres/build.sh
+    mkdir -p /opt/nighres/wheels
+    for py in 311 312 313; do
+        lock_install ${tmp}/nighres_py${py} ${pins}/nighres_build_py${py}.conda.lock
+        rm -rf ${tmp}/nighres_build && cp -a ${tmp}/nighres ${tmp}/nighres_build
+        (cd ${tmp}/nighres_build && \
+            PATH=${tmp}/nighres_py${py}/bin:$PATH JAVA_HOME=${tmp}/nighres_py${py} JCC_JDK=${tmp}/nighres_py${py} ./build.sh)
+        ${tmp}/nighres_py${py}/bin/python -m pip wheel -q --no-deps --no-build-isolation -w ${tmp}/wheels_py${py} \
+            ${tmp}/nighres_build
+        # the wheel contains an extension for this Python version only: tag it accordingly
+        ${tmp}/nighres_py${py}/bin/python -m wheel tags --remove --python-tag cp${py} --abi-tag cp${py} \
+            --platform-tag linux_x86_64 ${tmp}/wheels_py${py}/nighres-*.whl
+        cp ${tmp}/wheels_py${py}/nighres-*-cp${py}-cp${py}-linux_x86_64.whl /opt/nighres/wheels/
+    done
+    lock_install /opt/nighres/jdk ${pins}/nighres_jdk.conda.lock
+
+    # FSL 6.0.7.23 (the release manifest pins all FSL packages), with a fixed version of the installer; --conda: use
+    # the conda of the base environment
+    fetch https://git.fmrib.ox.ac.uk/fsl/conda/installer/-/raw/3.21.0/fsl/installer/fslinstaller.py \
+        0a63084cb5f1d67a39e0732a3d6cbc00c183eda85b77e94269c2ed2f5ea0064a ${tmp}/fslinstaller.py
+    /opt/conda/bin/python ${tmp}/fslinstaller.py -d /opt/fsl -V 6.0.7.23 --miniconda /opt/conda --conda \
+        --extras_dir /opt/conda/envs
+
+    # MSM (HCP version, required by ciftify, replaces the msm of FSL)
+    mv /opt/fsl/bin/msm /opt/fsl/bin/msm_fsl
+    fetch https://github.com/ecr05/MSM_HOCR/releases/download/v3.0FSL/msm_ubuntu_v3 \
+        3c0cbdb709f7263e08827f44aa57bbaa0eff2647291426ec8a43aa911e11d6e7 /opt/fsl/bin/msm
+    chmod +x /opt/fsl/bin/msm
+
+    # FreeSurfer 8.2.0, with the official patch archive of 2026-06-25 (applied directly: each file is checked against
+    # its md5 from the archive and copied into the installation, if installed there or marked as .force)
+    fetch https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/8.2.0/freesurfer_ubuntu24-8.2.0_amd64.deb \
+        a52996ed5147e5b7f1bd537c8405537cc2b133ae7075616b0c38975986a236a6 ${tmp}/freesurfer.deb
+    apt-get install -y -q ${tmp}/freesurfer.deb
+    rm ${tmp}/freesurfer.deb
+    ln -s /usr/local/freesurfer/8.2.0 /opt/freesurfer
+    fetch https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/.fs820_updates/patch_data_20260625.tgz \
+        99361361e40fbb4044cbede4202e3ef2ddeacbae145637761db669f52cca3e70 ${tmp}/fs_patch.tgz
+    tar -xzf ${tmp}/fs_patch.tgz -C ${tmp}
+    (cd ${tmp}/patch_data_20260625/ubuntu24_x86_64 && \
+        find . -type f ! -name '*.checksum' ! -name '*.msg' ! -name '*.force' | while read -r f; do
+            test "$(md5sum "$f" | cut -d' ' -f1)" = "$(cat "$f.checksum")"
+            if [ -e "/opt/freesurfer/$f" ] || [ -e "$f.force" ]; then
+                install -D -m "$(stat -c %a "$f")" "$f" "/opt/freesurfer/$f"
+                echo "FreeSurfer patch: $f"
+            fi
+        done)
+
+    # Connectome Workbench 2.2.1
+    fetch https://www.humanconnectome.org/storage/app/media/workbench/workbench-linux64-v2.2.1.zip \
+        4a4cf2b8ae79fe476adabf51ece716aaad0a73991d96fb2cdee45b4edb46f9c4 ${tmp}/workbench.zip
+    unzip -q ${tmp}/workbench.zip -d /opt
+
+    # ANTs 2.6.5
+    fetch https://github.com/ANTsX/ANTs/releases/download/v2.6.5/ants-2.6.5-ubuntu-24.04-X64-gcc.zip \
+        9f6a2c8881d6c94ea17171c0502e55cb898ad9afd50e4e23fde9a8c0997aa04b ${tmp}/ants.zip
+    unzip -q ${tmp}/ants.zip -d /opt/
+    mv /opt/ants-2.6.5 /opt/ants
+
+    # MATLAB Runtime R2023b (Update 11), for CAT12.9/SPM25
+    fetch https://ssd.mathworks.com/supportfiles/downloads/R2023b/Release/11/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2023b_Update_11_glnxa64.zip \
+        4fc979bbed1bf26d38f018777ea605aeb1640b12b48a47c546ca3c35445923dc ${tmp}/mcr.zip
+    unzip -q ${tmp}/mcr.zip -d ${tmp}/mcr_installer
+    rm ${tmp}/mcr.zip
+    ${tmp}/mcr_installer/install -mode silent -agreeToLicense yes -destinationFolder /opt/mcr
+    test -d /opt/mcr/R2023b
+
+    # CAT12.9 with SPM25 (standalone for MATLAB Runtime R2023b); the SPM12 standalone of the same archive is not
+    # installed
+    fetch https://www.neuro.uni-jena.de/cat12/CAT12.9_R2023b_MCR_Linux.zip \
+        847ba79167925b3871dafb85eab362c090042fd129db95e9c67dc756b848e9af ${tmp}/cat.zip
+    unzip -q ${tmp}/cat.zip -d ${tmp}
+    mv ${tmp}/CAT12.9_R2023b_MCR_Linux /opt/cat
+    rm -rf /opt/cat/spm12 /opt/cat/spm12.ctf /opt/cat/spm12.sh /opt/cat/run_spm12.sh /opt/cat/spm12_mcr
+    chmod +x /opt/cat/run_spm25.sh /opt/cat/spm25 /opt/cat/standalone/*.sh
+    # single call (to expand spm25.ctf while we have write permissions)
+    /opt/cat/run_spm25.sh /opt/mcr/R2023b function exit
+    # spm25 command
+    printf '#!/bin/bash\n/opt/cat/run_spm25.sh /opt/mcr/R2023b "$@"\n' > /usr/local/bin/spm25
+    chmod +x /usr/local/bin/spm25
+
+    # LAYNII 2.10.0
+    fetch https://github.com/layerfMRI/LAYNII/releases/download/v2.10.0/LayNii_v2.10.0_Linux64.zip \
+        f50a3e52fc2ee6753ded47599c178960286c45765a985510cccc359e13445775 ${tmp}/laynii.zip
+    unzip -q ${tmp}/laynii.zip -d /opt/laynii
+
+    # ITK-SNAP 4.4.0
+    mkdir -p /opt/itk-snap
+    fetch https://sourceforge.net/projects/itk-snap/files/itk-snap/4.4.0/itksnap-4.4.0-20250909-Linux-x86_64.tar.gz/download \
+        10524c143d329c197a6ce05ac112dcd5686f9c0d4b3b985c2287c02de923948c ${tmp}/itksnap.tar.gz
+    tar -xzf ${tmp}/itksnap.tar.gz --strip-components=1 -C /opt/itk-snap
+
+    # convert3d 1.4.4 (newest Linux binary, published as "Experimental")
+    mkdir -p /opt/convert3d
+    fetch https://sourceforge.net/projects/c3d/files/c3d/Experimental/c3d-1.4.4-Linux-gcc64.tar.gz/download \
+        4930f38ce81b119a375ca416871a597545dd779bf45f22572dcd5e0ea7ce0407 ${tmp}/c3d.tar.gz
+    tar -xzf ${tmp}/c3d.tar.gz --strip-components=1 -C /opt/convert3d
+
+    # dcm2niix v1.0.20260724, niimath v1.0.20260924, jq 1.8.2
+    fetch https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20260724/dcm2niix_lnx.zip \
+        2916a7bc64511eb20fb976a994799183cc1bfdd03395bf5d8edef54a58dee06f ${tmp}/dcm2niix.zip
+    unzip -q ${tmp}/dcm2niix.zip -d /usr/local/bin
+    fetch https://github.com/rordenlab/niimath/releases/download/v1.0.20260924/niimath_lnx.zip \
+        e05ea2f6fcfc53270a55938821c45a7c9a61ab586a5088d0a7009faf0d09cc6c ${tmp}/niimath.zip
+    unzip -q ${tmp}/niimath.zip -d ${tmp}/niimath
+    install -m 755 ${tmp}/niimath/niimath /usr/local/bin/niimath
+    fetch https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64 \
+        b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f /usr/local/bin/jq
+    chmod +x /usr/local/bin/dcm2niix /usr/local/bin/jq
+
+    # PALM (no release archives any more: git commit of 2026-07-13), with the gifti mex files compiled for octave
+    git clone -q https://github.com/andersonwinkler/PALM.git /opt/palm
+    git -C /opt/palm checkout -q 9086eff76dcacf4afde12c9af5400a1fe0033b9e
+    rm -rf /opt/palm/.git
+    (cd /opt/palm/lib/@gifti/private && octave --no-gui --eval 'exit(system("make PLATFORM=octave"))')
+
+    # Firefox ESR 153.4.0 (Mozilla's release archive; Ubuntu's firefox is a snap, which does not work in apptainer)
+    fetch https://ftp.mozilla.org/pub/firefox/releases/153.4.0esr/linux-x86_64/en-US/firefox-153.4.0esr.tar.xz \
+        1832c20dd8c5f69cee933debe62372f5c997845413c8eff846317f6463172032 ${tmp}/firefox.tar.xz
+    tar -xJf ${tmp}/firefox.tar.xz -C /opt
+    ln -s /opt/firefox/firefox /usr/local/bin/firefox
+
+    # environment of this layer
+    cat > /.singularity.d/env/85-gfae.sh <<'EOF'
+# gfae
+export PROMPT_COMMAND='. /opt/etc/bashrc; unset PROMPT_COMMAND'
+export PS1="\[\e[0;34m\]gfae> \[\e[0m\]"
+
+# conda base environment
+export CONDA_DIR=/opt/conda
+export PATH=/opt/conda/bin:$PATH
+
+# FSL
+export FSLDIR=/opt/fsl
+export PATH=$FSLDIR/bin/:$PATH
+. $FSLDIR/etc/fslconf/fsl.sh
+
+# FreeSurfer
+export FREESURFER_HOME=/opt/freesurfer
+export FS_LICENSE=${FS_LICENSE:-~/license.txt}
+export SUBJECTS_DIR=${SUBJECTS_DIR:-$FREESURFER_HOME/subjects}
+. $FREESURFER_HOME/SetUpFreeSurfer.sh > /dev/null
+
+# Connectome Workbench
+export PATH=$PATH:/opt/workbench/bin_linux64
+
+# CAT12.9 with SPM25 (standalone, MATLAB Runtime R2023b)
+export SPM_HOME=/opt/cat
+export MCR_HOME=/opt/mcr/R2023b
+export MCR_INHIBIT_CTF_LOCK=1
+export SPM_HTML_BROWSER=0
+export PATH=$PATH:/opt/cat/standalone
+
+# ANTs
+export ANTSPATH=/opt/ants/bin
+export PATH=/opt/ants/bin:$PATH
+
+# nighres (Java runtime for the wheels in /opt/nighres/wheels)
+export JCC_JDK=/opt/nighres/jdk
+
+# PALM, LAYNII, ITK-SNAP, convert3d
+export PATH="/opt/palm:/opt/laynii:/opt/itk-snap/bin:/opt/convert3d/bin:$PATH"
+export C3DPATH="/opt/convert3d"
+
+# Firefox ESR
+export BROWSER=/opt/firefox/firefox
+
+# TemplateFlow: templates are downloaded to the user's cache, unless TEMPLATEFLOW_HOME is set (e.g. to a shared
+# directory with APPTAINERENV_TEMPLATEFLOW_HOME)
+export TEMPLATEFLOW_HOME=${TEMPLATEFLOW_HOME:-$HOME/.cache/templateflow}
+
+# TCL/TK (for FSL, reset by FreeSurfer)
+export FSLWISH=/usr/bin/wish
+export FSLTCLSH=/usr/bin/tclsh
+EOF
+    chmod 644 /.singularity.d/env/85-gfae.sh
+
+    # clean up
+    /opt/conda/bin/conda clean --all --yes
+    rm -rf ~/.cache/pip/* /var/lib/apt/lists/* ${tmp}
+
+%test
+    set -e
+    # conda base environment
+    /opt/conda/bin/python -c "
+import sys, numpy, nibabel, pandas, nipype
+assert sys.version.split()[0] == '3.12.14', sys.version
+assert numpy.__version__ == '2.5.3', numpy.__version__
+assert nibabel.__version__ == '5.4.2', nibabel.__version__
+assert pandas.__version__ == '2.3.3', pandas.__version__
+"
+    /opt/conda/bin/python -W error::SyntaxWarning -c "import ciftify, ciftify.niio, ciftify.report, gradunwarp.core.unwarp_resample, pydeface, datalad, templateflow"
+    # every ciftify command loads (except ciftify_dlabel_report, which is missing from ciftify 2.3.3 itself)
+    for c in $(ls /opt/conda/bin | grep -E '^(ciftify_|cifti_vis_)' | grep -v dlabel_report); do
+        $c --help > /dev/null 2>&1 || { echo "not working: $c"; exit 1; }
+    done
+    # nighres: one wheel per Python version; the Java part of the cp312 wheel loads and starts the VM
+    for py in 311 312 313; do ls /opt/nighres/wheels/nighres-*-cp${py}-cp${py}-linux_x86_64.whl > /dev/null; done
+    nighres_tmp=$(mktemp -d)
+    (cd ${nighres_tmp} && /opt/conda/bin/python -m zipfile -e /opt/nighres/wheels/nighres-*-cp312-*.whl . && \
+        PYTHONPATH=${nighres_tmp} /opt/conda/bin/python -c "import nighresjava; nighresjava.initVM(initialheap='500m', maxheap='500m')")
+    rm -rf ${nighres_tmp}
+    # versions of the main software
+    test "$(cat ${FSLDIR}/etc/fslversion)" = "6.0.7.23"
+    grep -q "8.2.0" ${FREESURFER_HOME}/build-stamp.txt
+    wb_command -version | grep -q "Version: 2.2.1"
+    antsRegistration --version | grep -q "2.6.5"
+    firefox --version 2>/dev/null | grep -q "153.4.0esr"
+    dcm2niix --version 2>&1 | grep -q "v1.0.20260724"
+    test "$(jq --version)" = "jq-1.8.2"
+    c3d -version | grep -q "1.4.4"
+    # programs of all packages
+    for program in afni 3dDeconvolve suma fslmaths fsleyes slicetimer recon-all mri_convert mris_convert mri_synthseg \
+                   mri_synthstrip ciftify_recon_all msm msm_fsl antsRegistration antsApplyTransforms wb_command \
+                   LN2_LAYERS LN_MP2RAGE_DNOISE itksnap c3d dcm2niix niimath palm octave spm25 cat_standalone.sh \
+                   gradient_unwarp.py pydeface datalad git-annex heudiconv dcm2bids bids-validator-deno jq firefox \
+                   jupyter-lab conda; do
+        command -v ${program} > /dev/null || { echo "missing: ${program}"; exit 1; }
+    done
+    # PALM: a small analysis with octave, and the gifti mex files for octave
+    palm_tmp=$(mktemp -d)
+    printf '1\n2\n3\n4\n5\n6\n7\n8\n' > ${palm_tmp}/y.csv
+    (cd ${palm_tmp} && palm -i y.csv -n 50 -o ${palm_tmp}/out > /dev/null 2>&1)
+    test -f ${palm_tmp}/out_dat_tstat_uncp_c1.csv
+    rm -rf ${palm_tmp}
+    test -f /opt/palm/lib/@gifti/private/xml_parser.mex
+    # CAT12.9 in SPM25 (standalone)
+    spm25 eval "cat_version" 2>&1 | grep -q "CAT12.9" || { echo "not working: spm25 with CAT12.9"; exit 1; }
+    echo "all tests passed"
