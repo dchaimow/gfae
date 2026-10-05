@@ -7,8 +7,8 @@
 #
 # Build (without root access), from this directory, with the gfae image next to it as gfae.sif:
 #   ./build.sh gfae_matlab_ubuntu24.def gfae_matlab
-# base-image: TO_BE_SET_AFTER_BUILDING_GFAE
-# base-sha256: TO_BE_SET_AFTER_BUILDING_GFAE
+# base-image: gfae_20261005T191458Z_md511cf6f2d7ebaafad71a768377288e0a6_git7f367fdae433fb3b04ece18e02d2425c6b28eada.sif
+# base-sha256: 89c00d0872dee32d2462aa334a01bddecf0cbd3c8a8b3a9003bb89e6a827c74a
 
 Bootstrap: localimage
 From: gfae.sif
@@ -18,7 +18,7 @@ From: gfae.sif
 
 %labels
     Description gfae_matlab - gfae with MATLAB
-    Base TO_BE_SET_AFTER_BUILDING_GFAE
+    Base gfae_20261005T191458Z_md511cf6f2d7ebaafad71a768377288e0a6_git7f367fdae433fb3b04ece18e02d2425c6b28eada.sif (sha256 89c00d0872dee32d2462aa334a01bddecf0cbd3c8a8b3a9003bb89e6a827c74a)
     MATLAB R2026a Update 5 (mpm)
     SPM 25.01.02 (for MATLAB)
 
