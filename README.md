@@ -53,14 +53,41 @@ Changes compared with the Ubuntu 22.04 variant that change results: FreeSurfer 8
 
 To update a component, change its version, URL and checksum together (`sha256sum` of the new file). `%post` stops at the first error (`set -euo pipefail`). How and why, what was tested, build pitfalls: `notes/pinning.md`.
 
-**Building:** `build.sh` builds an image with `--fakeroot`, names it `<name>_<build time>_md5<checksum>_git<commit>.sif` (commit only if the repository has no uncommitted changes), then runs its `%test` section (`apptainer test`); if a test fails, the image is kept and the script reports `TESTS FAILED`. Builds need internet access (on nyx: the login node, in tmux, with `nice`); gfae-base takes several hours (AFNI is compiled). Build the layers in order and link each built image to the name the next definition file expects (`gfae-base.sif`, `gfae.sif`); record its sha256 as `# base-sha256:` in the next definition file, `build.sh` checks it:
+### Building
+
+**What `build.sh` does:** `./build.sh <definition file> <name>` builds the image with `--fakeroot`, names it `<name>_<build time>_md5<checksum>_git<commit>.sif` (with the commit only if the repository has no uncommitted changes, otherwise `gitUNAVAILABLE`), and then runs the `%test` section of the definition file (`apptainer test`). It ends with `tests passed: <image>` or `TESTS FAILED: <image>`; the image is kept in both cases. For a layer (`Bootstrap: localimage`), it first checks the base image against the `# base-sha256:` line of the definition file and stops if they differ.
+
+**Where and how to run it:** builds need internet access (on nyx only the login node has it) and run for a long time (gfae-base several hours, as AFNI is compiled; gfae about an hour). Run them in tmux, so that they survive a closed connection, with low priority (`nice`), and keep the output in a log file (`*.log` is ignored by git):
 ```bash
-./build.sh gfae-base_ubuntu24.def gfae-base
-ln -sfn gfae-base_<time>_md5<…>_git<…>.sif gfae-base.sif && sha256sum gfae-base.sif   # -> base-sha256 in gfae_ubuntu24.def
-./build.sh gfae_ubuntu24.def gfae
-ln -sfn gfae_<…>.sif gfae.sif && sha256sum gfae.sif                                  # -> base-sha256 in gfae_matlab_ubuntu24.def
-./build.sh gfae_matlab_ubuntu24.def gfae_matlab
+tmux new -s gfae-build                # detach: Ctrl-b d; reattach: tmux attach -t gfae-build
+cd /ptmp/dchaimow/code/gfae
+nice -n 19 ./build.sh gfae-base_ubuntu24.def gfae-base 2>&1 | tee build_gfae-base.log
 ```
+(`2>&1 | tee …` shows the output and also writes it, including errors, to the log file.)
+
+**Steps:** build the layers in order; each layer is built from the image of the previous one, under the name its definition file expects (`From: gfae-base.sif` or `From: gfae.sif`, links in this directory, ignored by git):
+1. Commit all changes, so that the image names contain the commit.
+2. Build gfae-base:
+   ```bash
+   nice -n 19 ./build.sh gfae-base_ubuntu24.def gfae-base 2>&1 | tee build_gfae-base.log
+   ```
+3. Check that the log ends with `tests passed: …`. Link the image and record its sha256 in `gfae_ubuntu24.def` (line `# base-sha256: …`), then commit:
+   ```bash
+   ln -sfn gfae-base_<time>_md5<…>_git<…>.sif gfae-base.sif
+   sha256sum gfae-base.sif
+   ```
+4. Build gfae:
+   ```bash
+   nice -n 19 ./build.sh gfae_ubuntu24.def gfae 2>&1 | tee build_gfae.log
+   ```
+5. Check the log, link the image as `gfae.sif`, record its sha256 in `gfae_matlab_ubuntu24.def`, commit (as in step 3).
+6. Build gfae_matlab:
+   ```bash
+   nice -n 19 ./build.sh gfae_matlab_ubuntu24.def gfae_matlab 2>&1 | tee build_gfae_matlab.log
+   ```
+7. Move the images to `/home/rglz/containers/`, add them to `gfae_log.md` there, and update the link `gfae.sif` there if they are the new recommended images.
+
+A layer whose definition file changed is rebuilt alone, as long as the layers below it are unchanged (e.g. after changing `gfae_ubuntu24.def`, steps 4–6). After rebuilding a layer, the layers above it must be rebuilt too, as their `base-sha256` no longer matches.
 
 ## Ubuntu 22.04 variant (frozen)
 
