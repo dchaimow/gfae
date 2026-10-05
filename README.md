@@ -33,7 +33,7 @@ Three definition files, each built on top of the image of the previous one (`Boo
 | data/BIDS tools | datalad 1.6.5 + git-annex, heudiconv 1.5.1, dcm2bids 3.3.1, BIDS validator 3.0.2 (`bids-validator-deno`), templateflow 25.1.1 |
 | LAYNII | 2.10.0 |
 | ITK-SNAP | 4.4.0 |
-| convert3d | 1.4.4 |
+| convert3d | 1.4.4 (archive name; the program reports version 1.4.2) |
 | dcm2niix / niimath / jq | v1.0.20260724 / v1.0.20260924 / 1.8.2 |
 | PALM | git commit 9086eff (2026-07-13), with GNU Octave 8.4 |
 | Firefox ESR | 153.4.0 |
@@ -55,7 +55,7 @@ To update a component, change its version, URL and checksum together (`sha256sum
 
 ### Building
 
-**What `build.sh` does:** `./build.sh <definition file> <name>` builds the image with `--fakeroot`, names it `<name>_<build time>_md5<checksum>_git<commit>.sif` (with the commit only if the repository has no uncommitted changes, otherwise `gitUNAVAILABLE`), and then runs the `%test` section of the definition file (`apptainer test`). It ends with `tests passed: <image>` or `TESTS FAILED: <image>`; the image is kept in both cases. For a layer (`Bootstrap: localimage`), it first checks the base image against the `# base-sha256:` line of the definition file and stops if they differ.
+**What `build.sh` does:** `./build.sh <definition file> <name>` builds the image with `--fakeroot`, names it `<name>_<build time>_md5<checksum>_git<commit>.sif` (with the commit only if the repository has no uncommitted changes, otherwise `gitUNAVAILABLE`), and then runs the `%test` section of the definition file (`apptainer test`). It ends with `tests passed: <image>` or `TESTS FAILED: <image>`; the image is kept in both cases. For a layer (`Bootstrap: localimage`), it first checks the base image against the `# base-sha256:` line of the definition file and stops if they differ. The labels of a layer replace labels of the same name inherited from its base (e.g. `Description`); all other labels of the base are kept.
 
 **Where and how to run it:** builds need internet access (on nyx only the login node has it) and run for a long time (gfae-base several hours, as AFNI is compiled; gfae about an hour). Run them in tmux, so that they survive a closed connection, with low priority (`nice`), and keep the output in a log file (`*.log` is ignored by git):
 ```bash

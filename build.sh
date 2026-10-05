@@ -10,7 +10,7 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 deffile=$1
-container_fname=${2-$(basename $deffile .def)}.sif
+name=${2-$(basename $deffile .def)}
 
 if output=$(git status --porcelain) && [ -z "$output" ]; then
   # Working directory clean
@@ -34,14 +34,19 @@ if grep -q "^Bootstrap: localimage" $deffile; then
   echo "base image $base: sha256 matches"
 fi
 
-# Build the container (without running %test, so that the image is kept if a test fails)
-apptainer build --fakeroot --notest $container_fname $deffile || exit 1
+# Build the container
+# - into a temporary file name (not <name>.sif, which may be the link to an image used as base of the next layer)
+# - without running %test, so that the image is kept if a test fails
+# - with --force: overwrites a left-over temporary file, and lets the labels of a layer replace labels of the same
+#   name inherited from its base image (e.g. Description)
+building_fname=${name}_building.sif
+apptainer build --fakeroot --force --notest $building_fname $deffile || exit 1
 
-# Name the container with the git sha and build date
-md5=$(md5sum $container_fname | cut -d' ' -f1)
+# Name the container with the build date, its md5 and the git sha
+md5=$(md5sum $building_fname | cut -d' ' -f1)
 build_date=$(date -u +"%Y%m%dT%H%M%SZ")
-final_fname=${container_fname%.sif}_${build_date}_md5${md5}_git${git_sha}.sif
-mv ${container_fname} ${final_fname}
+final_fname=${name}_${build_date}_md5${md5}_git${git_sha}.sif
+mv ${building_fname} ${final_fname}
 
 # Run the %test section of the definition file
 if apptainer test ${final_fname}; then

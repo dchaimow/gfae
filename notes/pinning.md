@@ -161,6 +161,18 @@ Findings while preparing `gfae-base_ubuntu24.def`, `gfae_ubuntu24.def`, `gfae_ma
 - **mpm:** `--release=R2026aU5` (latest update in October 2026; `R2026aU6` is rejected).
 - **PALM:** no release archives after alpha119; the git repository has the gifti code in `lib/@gifti/private`.
   The `palm` launcher falls back to `octave-cli` on the PATH if its configured `OCTAVEBIN` does not exist.
+- **First build of gfae_ubuntu24 (2026-10-05), problems found by `%test`:**
+  - `import templateflow` creates its cache directory: it failed (`FileExistsError`) because `~/.cache/templateflow`
+    was a link to /ptmp, which is not mounted in `apptainer test` (`build.sh` clears `APPTAINER_BINDPATH`). `%test`
+    now uses a temporary `TEMPLATEFLOW_HOME`.
+  - nighres: JCC sets the RPATH of the extension to the JDK of the build environment, which is removed after the
+    build (`libjvm.so: cannot open shared object file`); fixed with `patchelf --set-rpath` to the runtime JDK
+    (`/opt/nighres/jdk/jre/lib/amd64/server`) before making the wheels.
+  - convert3d: the archive `c3d-1.4.4-Linux-gcc64.tar.gz` contains a `c3d` that reports version 1.4.2.
+  - Labels: a layer does not overwrite labels inherited from its base (`Label: Description already exists and force
+    option is false`); `build.sh` now builds with `--force` (tested: replaces only labels of the same name).
+  - `build.sh` built into `<name>.sif`, which is also the link name of the base of the next layer (e.g. `gfae.sif`);
+    it now builds into `<name>_building.sif`.
 - **Testing without building:** most of the above was tested on /ptmp before any image build: an Ubuntu 24.04
   sandbox for apt (`apt-get install -s`), micromamba environments for conda/pip/nighres, FreeSurfer 8.2 unpacked
   from its deb (`ar p … data.tar.zst | zstd -dc | tar -x`) and run inside the existing jammy image, the MATLAB

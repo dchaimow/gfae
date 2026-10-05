@@ -31,7 +31,7 @@ From: gfae-base.sif
     datalad 1.6.5, git-annex, heudiconv 1.5.1, dcm2bids 3.3.1, bids-validator 3.0.2, templateflow 25.1.1
     LAYNII 2.10.0
     ITK-SNAP 4.4.0
-    convert3d 1.4.4
+    convert3d 1.4.4 (archive c3d-1.4.4; the program reports version 1.4.2)
     dcm2niix v1.0.20260724
     niimath v1.0.20260924
     jq 1.8.2
@@ -56,6 +56,7 @@ From: gfae-base.sif
         echo "$2  $3" | sha256sum -c --quiet -
     }
     apt-get update -qq
+    apt-get install -y -q --no-install-recommends patchelf
 
     # micromamba 2.9.0 (only used to install the conda environments from their lock files)
     fetch https://github.com/mamba-org/micromamba-releases/releases/download/2.9.0-0/micromamba-linux-64 \
@@ -109,6 +110,10 @@ From: gfae-base.sif
         rm -rf ${tmp}/nighres_build && cp -a ${tmp}/nighres ${tmp}/nighres_build
         (cd ${tmp}/nighres_build && \
             PATH=${tmp}/nighres_py${py}/bin:$PATH JAVA_HOME=${tmp}/nighres_py${py} JCC_JDK=${tmp}/nighres_py${py} ./build.sh)
+        # JCC sets the library path (RPATH) of the extension to the JDK of the build environment, which is removed:
+        # point it to the runtime JDK (/opt/nighres/jdk) instead
+        find ${tmp}/nighres_build -name '_nighresjava*.so' -exec patchelf --set-rpath \
+            /opt/nighres/jdk/jre/lib/amd64/server:/opt/nighres/jdk/jre/lib/amd64 {} \;
         ${tmp}/nighres_py${py}/bin/python -m pip wheel -q --no-deps --no-build-isolation -w ${tmp}/wheels_py${py} \
             ${tmp}/nighres_build
         # the wheel contains an extension for this Python version only: tag it accordingly
@@ -194,7 +199,7 @@ From: gfae-base.sif
         10524c143d329c197a6ce05ac112dcd5686f9c0d4b3b985c2287c02de923948c ${tmp}/itksnap.tar.gz
     tar -xzf ${tmp}/itksnap.tar.gz --strip-components=1 -C /opt/itk-snap
 
-    # convert3d 1.4.4 (newest Linux binary, published as "Experimental")
+    # convert3d: newest Linux binary, published as "Experimental" c3d-1.4.4 (the program reports version 1.4.2)
     mkdir -p /opt/convert3d
     fetch https://sourceforge.net/projects/c3d/files/c3d/Experimental/c3d-1.4.4-Linux-gcc64.tar.gz/download \
         4930f38ce81b119a375ca416871a597545dd779bf45f22572dcd5e0ea7ce0407 ${tmp}/c3d.tar.gz
@@ -285,6 +290,8 @@ EOF
 
 %test
     set -e
+    # TemplateFlow creates its cache when imported: use a temporary one, independent of the user's home
+    export TEMPLATEFLOW_HOME=$(mktemp -d)
     # conda base environment
     /opt/conda/bin/python -c "
 import sys, numpy, nibabel, pandas, nipype
@@ -312,7 +319,7 @@ assert pandas.__version__ == '2.3.3', pandas.__version__
     firefox --version 2>/dev/null | grep -q "153.4.0esr"
     dcm2niix --version 2>&1 | grep -q "v1.0.20260724"
     test "$(jq --version)" = "jq-1.8.2"
-    c3d -version | grep -q "1.4.4"
+    c3d -version | grep -q "Version 1.4.2"
     # programs of all packages
     for program in afni 3dDeconvolve suma fslmaths fsleyes slicetimer recon-all mri_convert mris_convert mri_synthseg \
                    mri_synthstrip ciftify_recon_all msm msm_fsl antsRegistration antsApplyTransforms wb_command \
